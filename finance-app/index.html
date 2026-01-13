@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Finance Tracking Web App for Creative Agencies - Track income, expenses, generate invoices, and analyze financial data">
+    <title>FinanceFlow - Creative Agency Finance Tracker</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <span class="logo-text">FinanceFlow</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="9" />
+                                <rect x="14" y="3" width="7" height="5" />
+                                <rect x="14" y="12" width="7" height="9" />
+                                <rect x="3" y="16" width="7" height="5" />
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#finances" class="nav-link" data-page="finances">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                            <span>Finance Entries</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link" data-page="analytics">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 20V10M12 20V4M6 20v-6" />
+                            </svg>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#invoices" class="nav-link" data-page="invoices">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                            </svg>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#clients" class="nav-link" data-page="clients">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            <span>Clients</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-page="settings">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" />
+                            </svg>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="theme-toggle-container">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5" />
+                            <path
+                                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                        </svg>
+                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12h18M3 6h18M3 18h18" />
+                        </svg>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        <input type="text" placeholder="Search..." id="globalSearch">
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <span>CA</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content Container -->
+            <div class="page-container" id="pageContainer">
+                <!-- Dashboard Page -->
+                <section class="page active" id="dashboardPage">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card income">
+                            <div class="stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 6l-9.5 9.5-5-5L1 18" />
+                                    <path d="M17 6h6v6" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total Income</span>
+                                <span class="stat-value" id="totalIncome">₹0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card expense">
+                            <div class="stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 18l-9.5-9.5-5 5L1 6" />
+                                    <path d="M17 18h6v-6" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total Expense</span>
+                                <span class="stat-value" id="totalExpense">₹0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card pending">
+                            <div class="stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Pending Amount</span>
+                                <span class="stat-value" id="pendingAmount">₹0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card balance">
+                            <div class="stat-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                    <path d="M1 10h22" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Net Balance</span>
+                                <span class="stat-value" id="netBalance">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Charts -->
+                    <div class="dashboard-charts">
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3>Monthly Income vs Expense</h3>
+                                <select id="dashboardYearSelect" class="chart-filter">
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="dashboardBarChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Payment Status</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="dashboardPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="recent-transactions">
+                        <div class="section-header">
+                            <h3>Recent Transactions</h3>
+                            <a href="#finances" class="view-all-link" data-page="finances">View All</a>
+                        </div>
+                        <div class="transactions-table-wrapper">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Client</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentTransactions">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Finance Entries Page -->
+                <section class="page" id="financesPage">
+                    <!-- Filters -->
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label>Date Range</label>
+                            <div class="date-range">
+                                <input type="date" id="filterStartDate" class="filter-input">
+                                <span>to</span>
+                                <input type="date" id="filterEndDate" class="filter-input">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Month</label>
+                            <select id="filterMonth" class="filter-select">
+                                <option value="">All Months</option>
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Year</label>
+                            <select id="filterYear" class="filter-select">
+                                <option value="">All Years</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Type</label>
+                            <select id="filterType" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select id="filterStatus" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="received">Received</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Payment Mode</label>
+                            <select id="filterPaymentMode" class="filter-select">
+                                <option value="">All Modes</option>
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="card">Card</option>
+                                <option value="cheque">Cheque</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="clearFilters">Clear Filters</button>
+                    </div>
+
+                    <!-- Add Entry Button -->
+                    <div class="action-bar">
+                        <button class="btn btn-primary" id="addEntryBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Add Entry
+                        </button>
+                    </div>
+
+                    <!-- Finance Entries Table -->
+                    <div class="entries-table-container">
+                        <table class="entries-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client Name</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Payment Mode</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financeEntriesBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="entriesEmptyState" style="display: none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <path d="M14 2v6h6M12 11v6M9 14h6" />
+                            </svg>
+                            <h3>No entries found</h3>
+                            <p>Add your first finance entry to get started</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics Page -->
+                <section class="page" id="analyticsPage">
+                    <div class="analytics-grid">
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>Monthly Income vs Expense</h3>
+                                <select id="analyticsYearSelect" class="chart-filter">
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                            <div class="chart-body large">
+                                <canvas id="monthlyBarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Pending vs Received</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="statusPieChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Payment Mode Distribution</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="paymentDonutChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>Year-wise Revenue Growth</h3>
+                            </div>
+                            <div class="chart-body large">
+                                <canvas id="yearLineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Invoices Page -->
+                <section class="page" id="invoicesPage">
+                    <div class="invoices-container">
+                        <!-- Invoice Form -->
+                        <div class="invoice-form-section">
+                            <div class="invoice-form-header">
+                                <h2>Create Invoice</h2>
+                                <button class="btn btn-secondary" id="resetInvoiceBtn">Reset</button>
+                            </div>
+
+                            <form id="invoiceForm" class="invoice-form">
+                                <!-- Agency Details -->
+                                <div class="form-section">
+                                    <h4>Agency Details</h4>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="agencyLogo">Agency Logo</label>
+                                            <div class="logo-upload">
+                                                <input type="file" id="agencyLogo" accept="image/*" hidden>
+                                                <div class="logo-preview" id="logoPreview">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2">
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <path d="M21 15l-5-5L5 21" />
+                                                    </svg>
+                                                    <span>Upload Logo</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="invoiceAgencyName">Agency Name</label>
+                                            <input type="text" id="invoiceAgencyName" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="invoiceAgencyContact">Contact</label>
+                                            <input type="text" id="invoiceAgencyContact">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceAgencyAddress">Address</label>
+                                        <textarea id="invoiceAgencyAddress" rows="2"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Client Details -->
+                                <div class="form-section">
+                                    <h4>Client Details</h4>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="invoiceClientSelect">Select Client</label>
+                                            <select id="invoiceClientSelect">
+                                                <option value="">-- Select a saved client --</option>
+                                                <!-- Dynamic client options -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="invoiceClientName">Client Name</label>
+                                            <input type="text" id="invoiceClientName" required
+                                                placeholder="Client name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="invoiceClientPhone">Phone</label>
+                                            <input type="text" id="invoiceClientPhone" placeholder="Phone number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="invoiceClientAddress">Client Address</label>
+                                        <textarea id="invoiceClientAddress" rows="2"
+                                            placeholder="Client address"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Invoice Details -->
+                                <div class="form-section">
+                                    <h4>Invoice Details</h4>
+                                    <div class="form-row three-col">
+                                        <div class="form-group">
+                                            <label for="invoiceNumber">Invoice Number</label>
+                                            <input type="text" id="invoiceNumber" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="invoiceDate">Invoice Date</label>
+                                            <input type="date" id="invoiceDate" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="invoiceDueDate">Due Date</label>
+                                            <input type="date" id="invoiceDueDate" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Services Table -->
+                                <div class="form-section">
+                                    <h4>Services</h4>
+                                    <div class="services-table-wrapper">
+                                        <table class="services-table" id="servicesTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Service Name</th>
+                                                    <th>Quantity</th>
+                                                    <th>Rate</th>
+                                                    <th>Amount</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="servicesBody">
+                                                <tr class="service-row">
+                                                    <td><input type="text" class="service-name"
+                                                            placeholder="Service name" required></td>
+                                                    <td><input type="number" class="service-qty" value="1" min="1"
+                                                            required></td>
+                                                    <td><input type="number" class="service-rate" value="0" min="0"
+                                                            step="0.01" required></td>
+                                                    <td><span class="service-amount">0.00</span></td>
+                                                    <td><button type="button" class="btn-icon remove-service"
+                                                            aria-label="Remove service">×</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="addServiceRow">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 5v14M5 12h14" />
+                                        </svg>
+                                        Add Service
+                                    </button>
+                                </div>
+
+                                <!-- Totals -->
+                                <div class="form-section totals-section">
+                                    <div class="totals-grid">
+                                        <div class="total-row">
+                                            <span>Subtotal</span>
+                                            <span id="invoiceSubtotal">0.00</span>
+                                        </div>
+                                        <div class="total-row">
+                                            <div class="total-input-group">
+                                                <span>Tax</span>
+                                                <input type="number" id="invoiceTaxPercent" value="0" min="0" max="100"
+                                                    step="0.1">
+                                                <span>%</span>
+                                            </div>
+                                            <span id="invoiceTaxAmount">0.00</span>
+                                        </div>
+                                        <div class="total-row">
+                                            <div class="total-input-group">
+                                                <span>Discount</span>
+                                                <input type="number" id="invoiceDiscountPercent" value="0" min="0"
+                                                    max="100" step="0.1">
+                                                <span>%</span>
+                                            </div>
+                                            <span id="invoiceDiscountAmount">0.00</span>
+                                        </div>
+                                        <div class="total-row grand-total">
+                                            <span>Grand Total</span>
+                                            <span id="invoiceGrandTotal">0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Status (Default: Pending) -->
+                                <div class="form-section">
+                                    <div class="form-group">
+                                        <label>Payment Status</label>
+                                        <div class="paid-status-badge">
+                                            <span class="badge badge-pending">⏳ Pending</span>
+                                        </div>
+                                        <input type="hidden" id="invoicePaymentStatus" value="pending">
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="invoice-actions">
+                                    <button type="button" class="btn btn-secondary" id="previewInvoiceBtn">Preview
+                                        Invoice</button>
+                                    <button type="button" class="btn btn-primary" id="downloadInvoiceBtn">Download
+                                        PDF</button>
+                                    <button type="submit" class="btn btn-success" id="saveInvoiceBtn">Save
+                                        Invoice</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Invoice History -->
+                        <div class="invoice-history-section">
+                            <h3>Invoice History</h3>
+                            <div class="invoice-history-list" id="invoiceHistoryList">
+                                <!-- Dynamic content -->
+                            </div>
+                            <div class="empty-state" id="invoicesEmptyState">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <path d="M14 2v6h6" />
+                                </svg>
+                                <p>No invoices yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Clients Page -->
+                <section class="page" id="clientsPage">
+                    <div class="clients-header">
+                        <h2>Client Directory</h2>
+                        <button class="btn btn-primary" id="addClientBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Add Client
+                        </button>
+                    </div>
+
+                    <div class="clients-grid" id="clientsGrid">
+                        <!-- Dynamic client cards -->
+                    </div>
+
+                    <div class="empty-state" id="clientsEmptyState">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <h3>No clients yet</h3>
+                        <p>Add your first client to get started</p>
+                    </div>
+                </section>
+
+                <!-- Settings Page -->
+                <section class="page" id="settingsPage">
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <h3>Appearance</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Dark Mode</span>
+                                    <span class="setting-description">Toggle dark/light theme</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingsThemeToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3>Currency & Tax</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Currency</span>
+                                    <span class="setting-description">Select your preferred currency</span>
+                                </div>
+                                <select id="settingsCurrency" class="filter-select">
+                                    <option value="₹">₹ INR (Indian Rupee)</option>
+                                    <option value="$">$ USD (US Dollar)</option>
+                                    <option value="€">€ EUR (Euro)</option>
+                                    <option value="£">£ GBP (British Pound)</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Default Tax Rate</span>
+                                    <span class="setting-description">Default tax percentage for invoices</span>
+                                </div>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="settingsDefaultTax" value="0" min="0" max="100" step="0.1">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3>Agency Details</h3>
+                            <div class="agency-form">
+                                <div class="form-group">
+                                    <label for="settingsAgencyName">Agency Name</label>
+                                    <input type="text" id="settingsAgencyName" placeholder="Your Agency Name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsAgencyContact">Contact Number</label>
+                                    <input type="text" id="settingsAgencyContact" placeholder="+91 XXXXXXXXXX">
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsAgencyEmail">Email</label>
+                                    <input type="email" id="settingsAgencyEmail" placeholder="hello@agency.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsAgencyAddress">Address</label>
+                                    <textarea id="settingsAgencyAddress" rows="3"
+                                        placeholder="Your agency address"></textarea>
+                                </div>
+                                <button class="btn btn-primary" id="saveAgencySettings">Save Agency Details</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-card danger-zone">
+                            <h3>Data Management</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Export Data</span>
+                                    <span class="setting-description">Download all your data as JSON</span>
+                                </div>
+                                <button class="btn btn-secondary" id="exportDataBtn">Export</button>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Import Data</span>
+                                    <span class="setting-description">Import data from a JSON file</span>
+                                </div>
+                                <input type="file" id="importDataInput" accept=".json" hidden>
+                                <button class="btn btn-secondary" id="importDataBtn">Import</button>
+                            </div>
+                            <div class="setting-item danger">
+                                <div class="setting-info">
+                                    <span class="setting-label">Clear All Data</span>
+                                    <span class="setting-description">Permanently delete all local data</span>
+                                </div>
+                                <button class="btn btn-danger" id="clearDataBtn">Clear Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Entry Modal -->
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Finance Entry</h3>
+                <button class="modal-close" id="closeModal" aria-label="Close modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="entryForm" class="modal-form">
+                <input type="hidden" id="entryId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="entryDate">Date *</label>
+                        <input type="date" id="entryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entryClient">Client *</label>
+                        <select id="entryClient" required>
+                            <option value="">Select Client</option>
+                            <!-- Dynamic client options -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="entryDescription">Description / Notes</label>
+                    <textarea id="entryDescription" rows="2" placeholder="Add description or notes"></textarea>
+                </div>
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="entryAmount">Amount *</label>
+                        <input type="number" id="entryAmount" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="entryType">Type *</label>
+                        <select id="entryType" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="statusFormGroup">
+                        <label for="entryStatus">Status *</label>
+                        <select id="entryStatus" required>
+                            <option value="pending">Pending</option>
+                            <option value="received">Received</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="entryPaymentMode">Payment Mode *</label>
+                    <select id="entryPaymentMode" required>
+                        <option value="cash">Cash</option>
+                        <option value="upi">UPI</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="card">Card</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEntry">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEntry">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoice Preview Modal -->
+    <div class="modal-overlay" id="invoicePreviewModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3>Invoice Preview</h3>
+                <button class="modal-close" id="closePreviewModal" aria-label="Close modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="invoice-preview-content" id="invoicePreviewContent">
+                <!-- Dynamic invoice preview -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="closePreviewBtn">Close</button>
+                <button class="btn btn-primary" id="downloadFromPreviewBtn">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Modal -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="clientModalTitle">Add Client</h3>
+                <button class="modal-close" id="closeClientModal" aria-label="Close modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="clientForm" class="modal-form">
+                <input type="hidden" id="clientId">
+                <div class="form-group">
+                    <label for="clientName">Client Name *</label>
+                    <input type="text" id="clientName" required placeholder="Enter client name">
+                </div>
+                <div class="form-group">
+                    <label for="clientPhone">Phone Number *</label>
+                    <input type="tel" id="clientPhone" required placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="clientAddress">Address</label>
+                    <textarea id="clientAddress" rows="3" placeholder="Enter client address"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelClient">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveClient">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Modules -->
+    <script src="js/data.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/invoices.js"></script>
+    <script src="js/clients.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
