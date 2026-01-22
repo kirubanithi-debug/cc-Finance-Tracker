@@ -361,6 +361,10 @@ class DataLayerAPI {
             query = query.or(`client_name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
         }
 
+        if (filters.statusOnly) {
+            query = query.eq('approval_status', filters.statusOnly);
+        }
+
         // Handle month/year filtering
         if (filters.month !== '' && filters.month !== undefined && filters.year) {
             const month = parseInt(filters.month) + 1; // JS months are 0-indexed
@@ -380,7 +384,9 @@ class DataLayerAPI {
     }
 
     async getFinancialSummary(filters = {}) {
-        const entries = await this.getFilteredEntries(filters);
+        // Ensure we only summarize approved entries
+        const summaryFilters = { ...filters, statusOnly: 'approved' };
+        const entries = await this.getFilteredEntries(summaryFilters);
 
         let totalIncome = 0;
         let totalExpense = 0;

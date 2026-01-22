@@ -3520,3 +3520,12 @@ table {
     display: flex;
     justify-content: flex-end;
 }
+/* Back Button Style */
+.back-btn {
+    margin-right: var(--spacing-sm);
+}
+.back-btn svg {
+    width: 24px;
+    height: 24px;
+}
+

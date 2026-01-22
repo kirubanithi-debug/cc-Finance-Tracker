@@ -229,8 +229,27 @@ class App {
     /**
      * Navigate to a page
      */
-    navigateTo(page) {
+    navigateTo(page, addToHistory = true) {
+        if (addToHistory && this.currentPage && this.currentPage !== page) {
+            // Initialize history stack if needed
+            if (!this.historyStack) this.historyStack = [];
+            this.historyStack.push(this.currentPage);
+        }
+
         this.currentPage = page;
+
+        // Toggle Back Button visibility
+        const backBtn = document.getElementById('globalBackBtn');
+        if (backBtn) {
+            if (this.historyStack && this.historyStack.length > 0) {
+                backBtn.classList.remove('hidden');
+                backBtn.style.display = 'flex'; // Ensure it's visible
+            } else {
+                backBtn.classList.add('hidden');
+                backBtn.style.display = 'none';
+            }
+        }
+
 
         // Update active nav link
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -277,9 +296,24 @@ class App {
     }
 
     /**
+     * Go back to previous page
+     */
+    goBack() {
+        if (this.historyStack && this.historyStack.length > 0) {
+            const prevPage = this.historyStack.pop();
+            this.navigateTo(prevPage, false); // Don't add to history when going back
+        }
+    }
+
+    /**
      * Bind UI events
      */
     bindEvents() {
+        // Global Back Button
+        document.getElementById('globalBackBtn')?.addEventListener('click', () => {
+            this.goBack();
+        });
+
         // Logout
         document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -685,6 +719,11 @@ class App {
                 <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
                 <td>${formatPaymentMode(entry.paymentMode)}</td>
                 <td>${entry.createdByName || '-'}</td>
+                <td>
+                    <span class="badge ${entry.approvalStatus === 'approved' ? 'badge-success' : (entry.approvalStatus === 'declined' ? 'badge-danger' : 'badge-warning')}">
+                        ${formatStatus(entry.approvalStatus || 'pending')}
+                    </span>
+                </td>
                 <td>
                     <div class="action-buttons">
                         <button class="action-btn edit" data-id="${entry.id}" title="Edit">
