@@ -233,6 +233,13 @@ class DataLayerAPI {
 
     async updateEntry(id, entry) {
         const dbEntry = toDbEntry(entry);
+        const userRole = await this.getCurrentUserRole();
+
+        // If employee updates entry, it goes back to pending
+        if (userRole !== 'admin') {
+            dbEntry.approval_status = 'pending';
+        }
+
         const { data, error } = await supabaseClient
             .from('finance_entries')
             .update(dbEntry)
@@ -422,6 +429,7 @@ class DataLayerAPI {
             .from('finance_entries')
             .select('*')
             .eq('user_id', userId)
+            .eq('approval_status', 'approved')
             .gte('date', `${year}-01-01`)
             .lte('date', `${year}-12-31`);
 
@@ -980,4 +988,8 @@ const formatPaymentMode = (mode) => {
         cheque: 'Cheque'
     };
     return modes[mode] || mode;
+};
+
+const formatStatus = (status) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
 };
