@@ -306,9 +306,9 @@ class DataLayerAPI {
     async getAllEntries(includeAllStatuses = false) {
         const userId = await this.getCurrentUserId();
         const isUserAdmin = await this.isAdmin();
-        
+
         let query;
-        
+
         if (isUserAdmin) {
             // Admin: see all entries where admin_id = current user (own + employees')
             query = supabaseClient
@@ -341,7 +341,7 @@ class DataLayerAPI {
     async getPendingEntries() {
         const userId = await this.getCurrentUserId();
         const isUserAdmin = await this.isAdmin();
-        
+
         if (!isUserAdmin) {
             // Employees can only see their own pending entries
             const { data, error } = await supabaseClient
@@ -408,9 +408,9 @@ class DataLayerAPI {
     async getFilteredEntries(filters = {}) {
         const userId = await this.getCurrentUserId();
         const isUserAdmin = await this.isAdmin();
-        
+
         let query;
-        
+
         if (isUserAdmin) {
             // Admin: see all entries where admin_id = current user
             query = supabaseClient.from('finance_entries').select('*').eq('admin_id', userId);
@@ -496,20 +496,20 @@ class DataLayerAPI {
     async getMonthlyData(year) {
         const userId = await this.getCurrentUserId();
         const isUserAdmin = await this.isAdmin();
-        
+
         let query = supabaseClient
             .from('finance_entries')
             .select('*')
             .eq('approval_status', 'approved')
             .gte('date', `${year}-01-01`)
             .lte('date', `${year}-12-31`);
-        
+
         if (isUserAdmin) {
             query = query.eq('admin_id', userId);
         } else {
             query = query.eq('user_id', userId);
         }
-        
+
         const { data, error } = await query;
 
         if (error) this.handleError(error, 'Get monthly data');
@@ -535,7 +535,8 @@ class DataLayerAPI {
         const distribution = {};
 
         entries.forEach(entry => {
-            const mode = entry.payment_mode || 'unknown';
+            // Fix: Use correct property name from mapped object (paymentMode not payment_mode)
+            const mode = entry.paymentMode || 'unknown';
             const amount = parseFloat(entry.amount) || 0;
             distribution[mode] = (distribution[mode] || 0) + amount;
         });
@@ -1064,7 +1065,8 @@ const formatPaymentMode = (mode) => {
         upi: 'UPI',
         bank_transfer: 'Bank Transfer',
         card: 'Card',
-        cheque: 'Cheque'
+        cheque: 'Cheque',
+        unknown: 'Unspecified'
     };
     return modes[mode] || mode;
 };

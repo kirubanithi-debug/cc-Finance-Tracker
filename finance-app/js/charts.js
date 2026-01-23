@@ -191,12 +191,13 @@ class ChartsManager {
                 cutout: '65%',
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'right',
                         labels: {
                             usePointStyle: true,
                             pointStyle: 'circle',
                             color: themeColors.textColor,
-                            padding: 20
+                            padding: 15,
+                            boxWidth: 8
                         }
                     },
                     tooltip: {
