@@ -241,9 +241,13 @@ class ProfileManager {
                 .eq('id', user.id)
                 .select();
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('Supabase update error:', updateError);
+                throw updateError;
+            }
 
             if (!updateResult || updateResult.length === 0) {
+                console.warn('Update returned no data. Possible RLS policy violation or record not found.');
                 throw new Error('Failed to update profile. Please try again.');
             }
 
