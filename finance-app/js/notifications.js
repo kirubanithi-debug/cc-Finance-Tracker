@@ -23,6 +23,7 @@ class NotificationsManager {
 
     async loadNotifications() {
         try {
+            const isAdmin = await dataLayer.isAdmin();
             if (!isAdmin) return;
 
             this.notifications = await dataLayer.getNotifications();

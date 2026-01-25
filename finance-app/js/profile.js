@@ -167,7 +167,13 @@ class ProfileManager {
         const fPhone = document.getElementById('pageProfilePhone');
 
         if (fName) fName.value = this.currentUser.name || '';
-        if (fEmail) fEmail.value = this.currentUser.email || '';
+        if (fEmail) {
+            fEmail.value = this.currentUser.email || '';
+            fEmail.readOnly = true;
+            fEmail.title = "Email cannot be changed";
+            fEmail.style.opacity = "0.7";
+            fEmail.style.cursor = "not-allowed";
+        }
         if (fPhone) fPhone.value = this.currentUser.phone || '';
     }
 

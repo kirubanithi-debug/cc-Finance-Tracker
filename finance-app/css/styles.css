@@ -150,11 +150,19 @@ button {
     background: none;
 }
 
-input,
-select,
 textarea {
     font-family: inherit;
     font-size: inherit;
+    resize: vertical;
+    min-height: 80px;
+    max-height: 150px;
+    width: 100%;
+}
+
+/* Specific fix for invoice address fields */
+textarea#invoiceClientAddress,
+textarea#invoiceAgencyAddress {
+    height: 80px;
 }
 
 table {

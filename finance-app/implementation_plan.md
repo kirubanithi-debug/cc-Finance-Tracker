@@ -1,45 +1,60 @@
-# Implementation Plan - FinanceFlow Updates
+# Implementation Plan: Fix 11 Identified Bugs
 
-## 1. UI & State Fixes
-- **Profile Data Persistence**: Fix profile data disappearing on refresh by ensuring `ProfileManager` correctly handles session restoration and `localStorage` syncing in `js/profile.js`.
-- **Sidebar Arrow Alignment**: Adjust CSS in `css/styles.css` to align the sidebar popup arrow with the design line as requested.
-- **Navbar Sticky**: Add `position: sticky` to the navbar in `css/styles.css`.
-- **Networth UI Fix**: Fix high number cutoff in dashboard by adjusting font sizes or container width in `css/styles.css`.
+This plan addresses the 11 bugs and feature requests identified by the user, organized by module.
 
-## 2. Invoice Module Updates
-- **Stop Email Sending**: Temporarily disable the email sending function in `js/invoices.js` by commenting out the API call.
-- **Invoice "Created By"**: Add `created_by` and `created_by_email` fields to `invoices` table and saving logic in `js/invoices.js`. Display this in the invoice history.
-- **Default Due Date**: Set default due date to 3 days from current date (instead of 30) in `js/invoices.js`.
-- **Save Bug Fix**: Investigate and fix the admin save invoice error (likely RLS or payload issue).
+## Group 1: User Profile & Authentication (Bugs 1, 5, 6)
+- **Bug 1: Profile Persistence & Read-Only Email**
+  - **Issue:** Phone number update fails; Data disappears on refresh; Email should be read-only.
+  - **Fix:** 
+    - Verify `users` table RLS policies for updates.
+    - Modify `js/profile.js` to ensure proper error handling and success verification.
+    - Set the Email input field to `readonly` or `disabled` in HTML (`index.html`).
+- **Bug 5: Password Reset UI**
+  - **Issue:** specific "New Password" fields lack a "Show Password" eye icon.
+  - **Fix:** Update `reset-password.html` to include the password toggle visibility icon and logic.
+- **Bug 6: Employee Password Reset Restriction**
+  - **Issue:** Employees should not be able to reset passwords via "Forgot Password".
+  - **Fix:** Update `js/auth.js` (`forgotPasswordForm` handler) to check if the email belongs to an employee (via RPC or query) before sending the reset link. If employee, show alert.
 
-## 3. Client & Employee Visibility (Permissions)
-- **Shared Client Visibility**: Ensure `clients` table RLS policies allow both Admin and Employees to view all clients. Update `js/clients.js` if necessary to fetch all.
-- **Invoice "Unknown" Fix**: Display the creator's name/email on invoices.
+## Group 2: Finance Entries & Permissions (Bugs 2, 3, 8, 11)
+- **Bug 2: Admin Delete Entry**
+  - **Issue:** Admin deletion is not working.
+  - **Fix:** Check `finance_entries` RLS policy for `DELETE`. Ensure Admins can delete any entry created by them or their employees.
+- **Bug 8: Approval/Decline Logic**
+  - **Issue:** Admin approval/decline fails; Employee delete requests need approval.
+  - **Fix:** 
+    - Verify RLS for `UPDATE` on `finance_entries` (specifically `approval_status` column).
+    - Ensure logical flow in `js/data-api.js` for handling delete requests vs immediate deletes.
+- **Bug 3 & 11: "Created By" Display (Entries & Invoices)**
+  - **Issue:** Shows "Unknown"; needs to show "Admin - [Name]" or "Employee - [Name]".
+  - **Fix:** 
+    - Modify `js/data-api.js` (`addEntry`, `addInvoice`) to store or fetch the creator's role.
+    - Update `js/main.js` (rendering logic) to format the "Created By" column as requested.
 
-## 4. Deletion Logic (Admin vs Employee)
-- **Admin**: Immediate deletion.
-- **Employee**: Deletion request logic.
-  - **Strategy**: Add `deletion_requested` (boolean) and `deletion_requested_by` columns to `finance_entries` table.
-  - **Employee Action**: When employee deletes, set flag instead of deleting.
-  - **Admin Action**: Admin sees "Deletion Requests" (or filtered view). Admin approval deletes the record. Admin decline clears the flag.
+## Group 3: Invoices (Bugs 4, 7)
+- **Bug 4: Invoice Date Defaults**
+  - **Issue:** Date defaults need adjustment.
+  - **Fix:** Update `js/invoices.js` (or creation modal init) to set:
+    - Invoice Date = Today.
+    - Due Date = Today + 3 Days.
+- **Bug 7: Client Address Field**
+  - **Issue:** Field is too large.
+  - **Fix:** Update `css/styles.css` to restrict the height/size of the generic textarea or specific client address field in the invoice form.
 
-## 5. New Modules
-- **Available Balance Module**:
-  - Logic: `Available = Total Income (Received) - Total Expenses`.
-  - Display "Pending" separately.
-  - Ensure "Available" does not include Pending amounts.
-- **Investment Module**:
-  - **Database**: Create `investments` table (`id`, `item_name`, `type`, `amount`, `buy_date`, `purpose`, `created_by`, `status` [pending/approved]).
-  - **UI**: New "Investments" page/section.
-  - **Logic**: 
-    - Employee adds -> Status 'pending'.
-    - Admin adds -> Status 'approved'.
-    - Admin approves/declines employee entries.
-  - **PDF**: Add download feature for investment list.
+## Group 4: Investments (Bugs 9, 10)
+- **Bug 9: Admin Investment Persistence**
+  - **Issue:** Investments disappear on refresh.
+  - **Fix:** Check RLS on `investments` table (`SELECT` policy likely missing or too strict).
+- **Bug 10: Employee Investments Flow**
+  - **Issue:** Employees can add investments; they should be "Pending" until Admin approves.
+  - **Fix:** 
+    - Ensure `investments` table has `status` column (default 'pending' for employees).
+    - Update `js/investments.js` to show pending status.
+    - Add Admin approval UI for investments (similar to finance entries).
 
-## 6. Execution Steps
-1.  **Immediate Fixes**: Stop Email, Profile Refresh, UI Tweaks (Navbar, Sidebar, Networth).
-2.  **Database Updates**: Run SQL migrations for `investments`, `invoices` modifications, and RLS updates for Clients.
-3.  **Logic Implementation**: Update `data-api.js` for new calculations and deletion logic.
-4.  **UI Implementation**: Add Investment pages, Update Dashboard for "Available", Add "Created By" in Invoice.
-5.  **Review**: Verify all constraints (Employee restrictions, Admin powers).
+## Execution Strategy
+1.  **Database Fixes (High Priority):** Create `supabase_migration_v15_fixes_all.sql` to address all RLS (Row Level Security) issues for Users, Entries, Investments, and Invoices.
+2.  **Frontend Logic:** Systematically update JS files (`profile.js`, `auth.js`, `data-api.js`, `invoices.js`, `investments.js`).
+3.  **UI Polish:** Update HTML/CSS for Password Toggle and Input sizing.
+
+**User Approval:** Waiting for user confirmation to proceed with this plan.

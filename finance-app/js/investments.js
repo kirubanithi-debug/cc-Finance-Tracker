@@ -130,10 +130,11 @@ class InvestmentsManager {
         });
     }
 
-    renderTable() {
+    async renderTable() {
         const tbody = document.getElementById('investmentsBody');
         const emptyState = document.getElementById('investmentsEmptyState');
         const currency = window.appCurrency || '₹';
+        const isAdmin = await dataLayer.isAdmin();
 
         if (!tbody) return;
 
@@ -160,14 +161,14 @@ class InvestmentsManager {
                 <td>
                     <div class="action-buttons">
                          ${inv.status === 'pending' && isAdmin ? `
-                            <button class="action-btn edit" onclick="investmentsManager.approve(${inv.id})" title="Approve">
+                            <button class="action-btn edit" onclick="investmentsManager.approve('${inv.id}')" title="Approve">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </button>
-                            <button class="action-btn delete" onclick="investmentsManager.decline(${inv.id})" title="Decline">
+                            <button class="action-btn delete" onclick="investmentsManager.decline('${inv.id}')" title="Decline">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
                             </button>
                          ` : ''}
-                         <button class="action-btn delete" onclick="investmentsManager.delete(${inv.id})" title="Delete">
+                         <button class="action-btn delete" onclick="investmentsManager.delete('${inv.id}')" title="Delete">
                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                          </button>
                     </div>

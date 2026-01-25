@@ -224,15 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 try {
-                    // Check user role first using secure RPC
-                    // This handles both explicit 'employee' role and implied employees
-                    const { data: role, error: roleError } = await supabaseClient
-                        .rpc('get_user_role_by_email', { email_input: resetEmail });
+                    // Check if email belongs to an employee using our new secure RPC
+                    const { data: isEmployee, error: checkError } = await supabaseClient
+                        .rpc('is_employee_email', { check_email: resetEmail });
 
-                    if (roleError) {
-                        console.warn('Role check failed, proceeding with default flow:', roleError);
-                    } else if (role === 'employee') {
-                        alert("You don't have access to change the password. Please contact admin.");
+                    if (checkError) {
+                        console.warn('Employee check failed:', checkError);
+                        // Continue cautiously or handle error
+                    }
+
+                    if (isEmployee) {
+                        alert("You are not eligible to reset password. Please contact admin.");
                         if (sendResetBtn) {
                             sendResetBtn.disabled = false;
                             sendResetBtn.textContent = 'Send Reset Link';

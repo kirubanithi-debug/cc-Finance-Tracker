@@ -267,6 +267,10 @@ class DataLayerAPI {
         // Employees' entries need approval, admins' entries are auto-approved
         const approvalStatus = userRole === 'admin' ? 'approved' : 'pending';
 
+        const isAdmin = await this.isAdmin();
+        const roleLabel = isAdmin ? 'Admin' : 'Employee';
+        const formattedCreatedBy = `${roleLabel} - ${userName}`;
+
         const { data, error } = await supabaseClient
             .from('finance_entries')
             .insert({
@@ -274,7 +278,7 @@ class DataLayerAPI {
                 user_id: userId,
                 admin_id: adminId,
                 approval_status: approvalStatus,
-                created_by_name: userName
+                created_by_name: formattedCreatedBy
             })
             .select()
             .single();
@@ -659,7 +663,9 @@ class DataLayerAPI {
         const { data: { session } } = await supabaseClient.auth.getSession();
         const userEmail = session?.user?.email;
 
-        const adminId = await this.getAdminId();
+        const isAdmin = await this.isAdmin();
+        const roleLabel = isAdmin ? 'Admin' : 'Employee';
+        const formattedCreatedBy = `${roleLabel} - ${userName}`;
 
         const { data: invoiceResult, error: invoiceError } = await supabaseClient
             .from('invoices')
@@ -668,7 +674,7 @@ class DataLayerAPI {
                 user_id: userId,
                 admin_id: adminId,
                 created_by: userId,
-                created_by_name: userName,
+                created_by_name: formattedCreatedBy,
                 created_by_email: userEmail
             })
             .select()

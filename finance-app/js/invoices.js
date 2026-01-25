@@ -56,7 +56,7 @@ class InvoiceManager {
     setDefaultDates() {
         const today = new Date();
         const dueDate = new Date(today);
-        dueDate.setDate(dueDate.getDate() + 30);
+        dueDate.setDate(dueDate.getDate() + 3); // Due Date is Today + 3 Days
 
         document.getElementById('invoiceDate').value = today.toISOString().split('T')[0];
         document.getElementById('invoiceDueDate').value = dueDate.toISOString().split('T')[0];
