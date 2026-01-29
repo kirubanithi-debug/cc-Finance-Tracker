@@ -43,7 +43,6 @@ class App {
             window.location.href = 'login.html';
             return;
         }
-
         try {
             // Initialize database
             await dataLayer.init();
@@ -56,6 +55,7 @@ class App {
             await this.loadSettings();
 
             // Initialize UI
+            this.populateYearDropdowns();
             this.bindEvents();
             this.bindNavigation();
 
@@ -103,6 +103,12 @@ class App {
             if (window.notificationsManager) {
                 console.log('Initializing notifications manager...');
                 window.notificationsManager.init();
+            }
+
+            // Initialize Petty Cash Manager
+            if (window.pettyCashManager) {
+                console.log('Initializing petty cash manager...');
+                window.pettyCashManager.init();
             }
 
             // Setup role-based visibility
@@ -181,6 +187,42 @@ class App {
         if (agencyAddressEl && settings.agencyAddress) {
             agencyAddressEl.value = settings.agencyAddress;
         }
+    }
+
+    /**
+     * Populate Year Dropdowns (2024 to 2050)
+     */
+    populateYearDropdowns() {
+        const yearSelectIds = [
+            'dashFilterYear',
+            'filterYear',
+            'analyticsYearSelect',
+            'dashboardYearSelect'
+        ];
+
+        const startYear = 2024;
+        const endYear = 2050; // Future proofing
+        const currentYear = new Date().getFullYear();
+
+        yearSelectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            // Keep only the first option ("All Years" or placeholder)
+            // Assuming first option is value="" or similar descriptive text
+            // We want to preserve specific "All Years" option if it exists
+            const hasAllOption = select.options.length > 0 && select.options[0].value === "";
+            let initialHTML = hasAllOption ? select.options[0].outerHTML : '';
+
+            // If it's a chart selector that doesn't have "All Years" usually, simply clearing is fine
+            // But let's rebuild clean options
+
+            let optionsHTML = initialHTML;
+            for (let y = startYear; y <= endYear; y++) {
+                optionsHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+            }
+            select.innerHTML = optionsHTML;
+        });
     }
 
     /**

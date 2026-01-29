@@ -638,7 +638,8 @@ table {
 /* ==================== Stats Cards ==================== */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    /* 5 cards in one row */
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
 }
@@ -2300,9 +2301,30 @@ table {
 }
 
 /* ==================== Responsive Design ==================== */
-@media (max-width: 1200px) {
+
+/* Tablet / Medium Screens (768px - 1200px) */
+@media (max-width: 1200px) and (min-width: 769px) {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chart-card.full-width {
+        grid-column: span 2;
+    }
+}
+
+/* Mobile Screens (< 768px) */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 
     .dashboard-charts {
@@ -2324,6 +2346,18 @@ table {
     .invoice-history-section {
         max-height: 400px;
     }
+
+    /* Adjust main content for mobile sidebar */
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .header {
+        width: 100%;
+        left: 0;
+    }
+}
 }
 
 @media (max-width: 992px) {

@@ -113,6 +113,16 @@
                             <span>Clients</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="#pettyCash" class="nav-link" data-page="pettyCash">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <path d="M6 12h.01M18 12h.01" />
+                            </svg>
+                            <span>Petty Cash</span>
+                        </a>
+                    </li>
                     <li class="nav-item admin-only">
                         <a href="#investments" class="nav-link" data-page="investments">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -454,6 +464,7 @@
                                 <option value="bank_transfer">Bank Transfer</option>
                                 <option value="card">Card</option>
                                 <option value="cheque">Cheque</option>
+                                <option value="multi_pay">Multi Pay</option>
                             </select>
                         </div>
                         <button class="btn btn-secondary" id="clearFilters">Clear Filters</button>
@@ -791,6 +802,81 @@
                                 </svg>
                                 <p>No invoices yet</p>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Petty Cash Page -->
+                <section class="page" id="pettyCashPage">
+                    <div class="petty-cash-header"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2>Petty Cash Management</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="addPettyCashEntryBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add Expense
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Petty Cash Balance Card -->
+                    <div class="stats-grid" style="grid-template-columns: 1fr; margin-bottom: 1.5rem;">
+                        <div class="stat-card balance detail-card">
+                            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                                    <circle cx="12" cy="12" r="2" />
+                                    <path d="M6 12h.01M18 12h.01" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Current Petty Cash Balance</span>
+                                <span class="stat-value" id="pettyCashBalanceDisplay">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Petty Cash Filter Bar -->
+                    <div class="filters-bar" style="margin-bottom: 1.5rem;">
+                        <div class="filter-group">
+                            <label>Date Range</label>
+                            <div class="date-range">
+                                <input type="date" id="pcFilterStartDate" class="filter-input">
+                                <span>to</span>
+                                <input type="date" id="pcFilterEndDate" class="filter-input">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" id="pcClearFilters">Clear Filters</button>
+                    </div>
+
+                    <!-- Petty Cash Entries Table -->
+                    <div class="entries-table-container">
+                        <table class="services-table" id="pettyCashTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Added By</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pettyCashBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                        <div class="empty-state hidden" id="pettyCashEmptyState"
+                            style="text-align: center; padding: 3rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                style="width: 48px; height: 48px; margin-bottom: 1rem; color: var(--color-text-muted);">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <path d="M14 2v6h6" />
+                            </svg>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">No petty cash expenses yet</h3>
+                            <p style="color: var(--color-text-secondary);">Add an expense to start tracking</p>
                         </div>
                     </div>
                 </section>
@@ -1167,6 +1253,16 @@
                             <option value="income">Income</option>
                             <option value="expense">Expense</option>
                         </select>
+                        <!-- Petty Cash Toggle (Hidden by default, shown for expense) -->
+                        <div class="toggle-wrapper mt-10 hidden" id="pettyCashToggleWrapper"
+                            style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="addToPettyCashToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span style="font-size: 0.85rem; color: var(--color-text-secondary);">Add to Petty
+                                Cash?</span>
+                        </div>
                     </div>
                     <div class="form-group" id="statusFormGroup">
                         <label for="entryStatus">Status *</label>
@@ -1184,6 +1280,7 @@
                         <option value="bank_transfer">Bank Transfer</option>
                         <option value="card">Card</option>
                         <option value="cheque">Cheque</option>
+                        <option value="multi_pay">Multi Pay</option>
                     </select>
                 </div>
                 <div class="modal-actions">
@@ -1238,6 +1335,49 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancelInvestment">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="saveInvestment">Save Investment</button>
+                </div>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <!-- Petty Cash Entry Modal -->
+    <div class="modal-overlay" id="pettyCashModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="pettyCashModalTitle">Add Petty Cash Expense</h3>
+                <button class="btn-icon" id="closePettyCashModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="pettyCashForm" class="modal-form">
+                <input type="hidden" id="pettyCashEntryId">
+                <div class="form-group">
+                    <label for="pcDescription">Description *</label>
+                    <input type="text" id="pcDescription" required placeholder="e.g. Office Tea, Stationery">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pcAmount">Amount *</label>
+                        <input type="number" id="pcAmount" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="pcCategory">Category</label>
+                        <select id="pcCategory">
+                            <option value="Food">Food & Beverages</option>
+                            <option value="Supplies">Office Supplies</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Repairs">Repairs</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Logic note: Date defaults to today in JS if not present, simple form to start -->
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelPettyCash">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
                 </div>
             </form>
         </div>
@@ -1365,6 +1505,7 @@
     <script src="js/employees.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/investments.js"></script>
+    <script src="js/petty-cash.js"></script>
     <script src="js/main.js"></script>
     <script src="js/app.js"></script>
 </body>

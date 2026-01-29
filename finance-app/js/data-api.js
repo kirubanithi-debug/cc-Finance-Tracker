@@ -291,32 +291,45 @@ class DataLayerAPI {
     // ==================== Finance Entries ====================
 
     async addEntry(entry) {
-        const userId = await this.getCurrentUserId();
-        const userRole = await this.getCurrentUserRole();
-        const userName = await this.getCurrentUserName();
-        const adminId = await this.getAdminId();
-        const dbEntry = toDbEntry(entry);
+        const user = await this.getCurrentUser();
+        if (!user) throw new Error('User not logged in');
 
-        // Employees' entries need approval, admins' entries are auto-approved
-        const approvalStatus = userRole === 'admin' ? 'approved' : 'pending';
+        const role = await this.getCurrentUserRole();
+        // Determine status: Admin -> approved, Employee -> pending (unless configured otherwise)
+        // Correction per request: preserve what was passed, or default based on role
+        if (!entry.status) {
+            entry.status = role === 'admin' ? 'approved' : 'pending';
+        }
 
-        const isAdmin = await this.isAdmin();
-        const roleLabel = isAdmin ? 'Admin' : 'Employee';
-        const formattedCreatedBy = `${roleLabel} - ${userName}`;
+        // If status is received/pending, map to approval_status
+        // Logic: if status is 'pending' payment, is it approved? 
+        // We use approval_status for Admin check.
+        const approvalStatus = role === 'admin' ? 'approved' : 'pending';
+
+        const dbEntry = {
+            user_id: user.id,
+            admin_id: await this.getAdminId(), // Key for RLS
+            date: entry.date,
+            client_name: entry.client,
+            description: entry.description,
+            amount: entry.amount,
+            type: entry.type,
+            status: entry.status || 'pending', // Payment status
+            payment_mode: entry.paymentMode,
+            approval_status: approvalStatus,
+            created_by_name: await this.getCurrentUserName(),
+            // New Petty Cash Flag
+            is_petty_cash: entry.isPettyCash || false
+        };
 
         const { data, error } = await supabaseClient
             .from('finance_entries')
-            .insert({
-                ...dbEntry,
-                user_id: userId,
-                admin_id: adminId,
-                approval_status: approvalStatus,
-                created_by_name: formattedCreatedBy
-            })
+            .insert(dbEntry)
             .select()
             .single();
 
         if (error) this.handleError(error, 'Add entry');
+
         this.notifyListeners(DATA_STORES.ENTRIES);
         return fromDbEntry(data);
     }
