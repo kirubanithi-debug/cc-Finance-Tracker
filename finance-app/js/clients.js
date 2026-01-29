@@ -406,6 +406,12 @@ class ClientsManager {
             document.getElementById('invoiceClientName').value = client.name;
             document.getElementById('invoiceClientPhone').value = client.phone || '';
             document.getElementById('invoiceClientAddress').value = client.address || '';
+
+            // Fix: Populate Email if available to prevent data cutoff/loss
+            const emailField = document.getElementById('invoiceClientEmail');
+            if (emailField) {
+                emailField.value = client.email || '';
+            }
         }
     }
 
