@@ -4,6 +4,14 @@
    ===================================================== */
 
 /* ==================== Auth Card Styles ==================== */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
 .auth-card {
     position: relative;
     z-index: 10;
@@ -586,584 +594,585 @@
 .modal-close:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
-}        /* Animated Background Container */
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        /* Gradient Mesh Background */
-        .gradient-mesh {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
-            animation: meshShift 20s ease-in-out infinite;
-        }
-
-        @keyframes meshShift {
-
-            0%,
-            100% {
-                background-position: 0% 0%, 100% 100%, 50% 50%;
-            }
-
-            50% {
-                background-position: 100% 100%, 0% 0%, 60% 40%;
-            }
-        }
-
-        /* Floating Orbs */
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.6;
-        }
-
-        .orb-1 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.3));
-            top: -100px;
-            left: -100px;
-            animation: floatRotate1 25s ease-in-out infinite;
-        }
-
-        .orb-2 {
-            width: 350px;
-            height: 350px;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.25));
-            bottom: -80px;
-            right: -80px;
-            animation: floatRotate2 30s ease-in-out infinite;
-        }
-
-        .orb-3 {
-            width: 250px;
-            height: 250px;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(239, 68, 68, 0.2));
-            top: 50%;
-            right: 10%;
-            animation: floatRotate3 28s ease-in-out infinite;
-        }
-
-        .orb-4 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(99, 102, 241, 0.25));
-            bottom: 20%;
-            left: 15%;
-            animation: floatRotate4 22s ease-in-out infinite;
-        }
-
-        /* Rotating Container for all background elements */
-        .rotating-bg {
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            animation: slowRotate 60s linear infinite;
-        }
-
-        @keyframes slowRotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes floatRotate1 {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-            }
-
-            25% {
-                transform: translate(50px, -60px) rotate(90deg) scale(1.1);
-            }
-
-            50% {
-                transform: translate(-30px, 40px) rotate(180deg) scale(0.9);
-            }
-
-            75% {
-                transform: translate(60px, 50px) rotate(270deg) scale(1.05);
-            }
-        }
-
-        @keyframes floatRotate2 {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-            }
-
-            25% {
-                transform: translate(-40px, 50px) rotate(-90deg) scale(1.08);
-            }
-
-            50% {
-                transform: translate(50px, -30px) rotate(-180deg) scale(0.92);
-            }
-
-            75% {
-                transform: translate(-60px, -40px) rotate(-270deg) scale(1.03);
-            }
-        }
-
-        @keyframes floatRotate3 {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-            }
-
-            33% {
-                transform: translate(70px, 40px) rotate(120deg) scale(1.15);
-            }
-
-            66% {
-                transform: translate(-50px, -60px) rotate(240deg) scale(0.88);
-            }
-        }
-
-        @keyframes floatRotate4 {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-            }
-
-            33% {
-                transform: translate(-80px, 30px) rotate(-120deg) scale(1.12);
-            }
-
-            66% {
-                transform: translate(40px, -70px) rotate(-240deg) scale(0.9);
-            }
-        }
-
-
-        /* Subtle Grid Pattern */
-        .grid-pattern {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: gridMove 30s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% {
-                transform: translate(0, 0);
-            }
-
-            100% {
-                transform: translate(60px, 60px);
-            }
-        }
-
-        /* Sparkle Particles */
-        .particles {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            animation: sparkle 4s ease-in-out infinite;
-        }
-
-        .particle:nth-child(1) {
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .particle:nth-child(2) {
-            top: 60%;
-            left: 85%;
-            animation-delay: 1s;
-        }
-
-        .particle:nth-child(3) {
-            top: 80%;
-            left: 30%;
-            animation-delay: 2s;
-        }
-
-        .particle:nth-child(4) {
-            top: 30%;
-            left: 70%;
-            animation-delay: 0.5s;
-        }
-
-        .particle:nth-child(5) {
-            top: 70%;
-            left: 50%;
-            animation-delay: 1.5s;
-        }
-
-        .particle:nth-child(6) {
-            top: 40%;
-            left: 20%;
-            animation-delay: 2.5s;
-        }
-
-        .particle:nth-child(7) {
-            top: 15%;
-            left: 60%;
-            animation-delay: 3s;
-        }
-
-        .particle:nth-child(8) {
-            top: 85%;
-            left: 75%;
-            animation-delay: 0.8s;
-        }
-
-        @keyframes sparkle {
-
-            0%,
-            100% {
-                opacity: 0;
-                transform: scale(0);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        /* Aurora Waves */
-        .aurora {
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            top: -25%;
-            left: -25%;
-            background:
-                linear-gradient(45deg, transparent 30%, rgba(99, 102, 241, 0.08) 50%, transparent 70%),
-                linear-gradient(-45deg, transparent 30%, rgba(139, 92, 246, 0.06) 50%, transparent 70%),
-                linear-gradient(90deg, transparent 30%, rgba(16, 185, 129, 0.05) 50%, transparent 70%);
-            animation: auroraWave 15s ease-in-out infinite;
-            filter: blur(40px);
-        }
-
-        @keyframes auroraWave {
-
-            0%,
-            100% {
-                transform: translateX(-10%) translateY(-10%) rotate(0deg);
-            }
-
-            33% {
-                transform: translateX(5%) translateY(5%) rotate(3deg);
-            }
-
-            66% {
-                transform: translateX(-5%) translateY(10%) rotate(-3deg);
-            }
-        }
-
-        /* Pulse Rings */
-        .pulse-ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            animation: pulseExpand 4s ease-out infinite;
-        }
-
-        .pulse-ring-1 {
-            width: 100px;
-            height: 100px;
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-        }
-
-        .pulse-ring-2 {
-            width: 80px;
-            height: 80px;
-            bottom: 25%;
-            right: 20%;
-            animation-delay: 1.3s;
-        }
-
-        .pulse-ring-3 {
-            width: 60px;
-            height: 60px;
-            top: 60%;
-            left: 70%;
-            animation-delay: 2.6s;
-        }
-
-        @keyframes pulseExpand {
-            0% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-
-            100% {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        /* Floating Geometric Shapes */
-        .shape {
-            position: absolute;
-            opacity: 0.15;
-            animation: floatShape 20s ease-in-out infinite;
-        }
-
-        .shape-1 {
-            width: 60px;
-            height: 60px;
-            border: 2px solid rgba(99, 102, 241, 0.5);
-            top: 15%;
-            right: 25%;
-            transform: rotate(45deg);
-        }
-
-        .shape-2 {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), transparent);
-            border-radius: 50%;
-            bottom: 35%;
-            left: 20%;
-            animation-delay: -5s;
-        }
-
-        .shape-3 {
-            width: 0;
-            height: 0;
-            border-left: 25px solid transparent;
-            border-right: 25px solid transparent;
-            border-bottom: 45px solid rgba(16, 185, 129, 0.2);
-            top: 70%;
-            right: 15%;
-            animation-delay: -10s;
-        }
-
-        .shape-4 {
-            width: 30px;
-            height: 30px;
-            border: 2px solid rgba(245, 158, 11, 0.4);
-            border-radius: 8px;
-            top: 40%;
-            left: 8%;
-            animation-delay: -7s;
-            transform: rotate(30deg);
-        }
-
-        @keyframes floatShape {
-
-            0%,
-            100% {
-                transform: translateY(0) rotate(0deg);
-            }
-
-            25% {
-                transform: translateY(-30px) rotate(90deg);
-            }
-
-            50% {
-                transform: translateY(0) rotate(180deg);
-            }
-
-            75% {
-                transform: translateY(30px) rotate(270deg);
-            }
-        }
-
-        /* Shooting Stars */
-        .shooting-star {
-            position: absolute;
-            width: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
-            border-radius: 50%;
-            animation: shoot 3s ease-in-out infinite;
-            opacity: 0;
-        }
-
-        .shooting-star-1 {
-            top: 20%;
-            left: 80%;
-            animation-delay: 0s;
-            transform: rotate(-45deg);
-        }
-
-        .shooting-star-2 {
-            top: 50%;
-            left: 90%;
-            animation-delay: 1.5s;
-            transform: rotate(-45deg);
-        }
-
-        .shooting-star-3 {
-            top: 35%;
-            left: 70%;
-            animation-delay: 2.8s;
-            transform: rotate(-45deg);
-        }
-
-        @keyframes shoot {
-            0% {
-                transform: translateX(0) rotate(-45deg);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateX(-300px) translateY(300px) rotate(-45deg);
-                opacity: 0;
-            }
-        }
-
-        /* Floating Dots */
-        .dot {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: rgba(99, 102, 241, 0.4);
-            border-radius: 50%;
-            animation: floatDot 8s ease-in-out infinite;
-        }
-
-        .dot-1 {
-            top: 10%;
-            left: 30%;
-            animation-delay: 0s;
-        }
-
-        .dot-2 {
-            top: 50%;
-            left: 80%;
-            animation-delay: 2s;
-            background: rgba(139, 92, 246, 0.4);
-        }
-
-        .dot-3 {
-            top: 90%;
-            left: 40%;
-            animation-delay: 4s;
-            background: rgba(16, 185, 129, 0.4);
-        }
-
-        .dot-4 {
-            top: 30%;
-            left: 55%;
-            animation-delay: 1s;
-            width: 4px;
-            height: 4px;
-        }
-
-        .dot-5 {
-            top: 65%;
-            left: 25%;
-            animation-delay: 3s;
-            background: rgba(6, 182, 212, 0.4);
-        }
-
-        .dot-6 {
-            top: 20%;
-            left: 85%;
-            animation-delay: 5s;
-            width: 8px;
-            height: 8px;
-        }
-
-        @keyframes floatDot {
-
-            0%,
-            100% {
-                transform: translateY(0) translateX(0);
-            }
-
-            25% {
-                transform: translateY(-20px) translateX(10px);
-            }
-
-            50% {
-                transform: translateY(-10px) translateX(-15px);
-            }
-
-            75% {
-                transform: translateY(15px) translateX(5px);
-            }
-        }
-
-        /* Glow Lines */
-        .glow-line {
-            position: absolute;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
-            animation: glowPulse 3s ease-in-out infinite;
-        }
-
-        .glow-line-1 {
-            width: 200px;
-            top: 30%;
-            left: 10%;
-            transform: rotate(-15deg);
-            animation-delay: 0s;
-        }
-
-        .glow-line-2 {
-            width: 150px;
-            bottom: 20%;
-            right: 15%;
-            transform: rotate(25deg);
-            animation-delay: 1s;
-        }
-
-        .glow-line-3 {
-            width: 180px;
-            top: 60%;
-            left: 50%;
-            transform: rotate(-5deg);
-            animation-delay: 2s;
-        }
-
-        @keyframes glowPulse {
-
-            0%,
-            100% {
-                opacity: 0.3;
-            }
-
-            50% {
-                opacity: 0.8;
-            }
-        }
-
+}
+
+/* Animated Background Container */
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Gradient Mesh Background */
+.gradient-mesh {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+    animation: meshShift 20s ease-in-out infinite;
+}
+
+@keyframes meshShift {
+
+    0%,
+    100% {
+        background-position: 0% 0%, 100% 100%, 50% 50%;
+    }
+
+    50% {
+        background-position: 100% 100%, 0% 0%, 60% 40%;
+    }
+}
+
+/* Floating Orbs */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.3));
+    top: -100px;
+    left: -100px;
+    animation: floatRotate1 25s ease-in-out infinite;
+}
+
+.orb-2 {
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.25));
+    bottom: -80px;
+    right: -80px;
+    animation: floatRotate2 30s ease-in-out infinite;
+}
+
+.orb-3 {
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(239, 68, 68, 0.2));
+    top: 50%;
+    right: 10%;
+    animation: floatRotate3 28s ease-in-out infinite;
+}
+
+.orb-4 {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(99, 102, 241, 0.25));
+    bottom: 20%;
+    left: 15%;
+    animation: floatRotate4 22s ease-in-out infinite;
+}
+
+/* Rotating Container for all background elements */
+.rotating-bg {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    animation: slowRotate 60s linear infinite;
+}
+
+@keyframes slowRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes floatRotate1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+
+    25% {
+        transform: translate(50px, -60px) rotate(90deg) scale(1.1);
+    }
+
+    50% {
+        transform: translate(-30px, 40px) rotate(180deg) scale(0.9);
+    }
+
+    75% {
+        transform: translate(60px, 50px) rotate(270deg) scale(1.05);
+    }
+}
+
+@keyframes floatRotate2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+
+    25% {
+        transform: translate(-40px, 50px) rotate(-90deg) scale(1.08);
+    }
+
+    50% {
+        transform: translate(50px, -30px) rotate(-180deg) scale(0.92);
+    }
+
+    75% {
+        transform: translate(-60px, -40px) rotate(-270deg) scale(1.03);
+    }
+}
+
+@keyframes floatRotate3 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+
+    33% {
+        transform: translate(70px, 40px) rotate(120deg) scale(1.15);
+    }
+
+    66% {
+        transform: translate(-50px, -60px) rotate(240deg) scale(0.88);
+    }
+}
+
+@keyframes floatRotate4 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+
+    33% {
+        transform: translate(-80px, 30px) rotate(-120deg) scale(1.12);
+    }
+
+    66% {
+        transform: translate(40px, -70px) rotate(-240deg) scale(0.9);
+    }
+}
+
+
+/* Subtle Grid Pattern */
+.grid-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 30s linear infinite;
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(60px, 60px);
+    }
+}
+
+/* Sparkle Particles */
+.particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: sparkle 4s ease-in-out infinite;
+}
+
+.particle:nth-child(1) {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    top: 60%;
+    left: 85%;
+    animation-delay: 1s;
+}
+
+.particle:nth-child(3) {
+    top: 80%;
+    left: 30%;
+    animation-delay: 2s;
+}
+
+.particle:nth-child(4) {
+    top: 30%;
+    left: 70%;
+    animation-delay: 0.5s;
+}
+
+.particle:nth-child(5) {
+    top: 70%;
+    left: 50%;
+    animation-delay: 1.5s;
+}
+
+.particle:nth-child(6) {
+    top: 40%;
+    left: 20%;
+    animation-delay: 2.5s;
+}
+
+.particle:nth-child(7) {
+    top: 15%;
+    left: 60%;
+    animation-delay: 3s;
+}
+
+.particle:nth-child(8) {
+    top: 85%;
+    left: 75%;
+    animation-delay: 0.8s;
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Aurora Waves */
+.aurora {
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    top: -25%;
+    left: -25%;
+    background:
+        linear-gradient(45deg, transparent 30%, rgba(99, 102, 241, 0.08) 50%, transparent 70%),
+        linear-gradient(-45deg, transparent 30%, rgba(139, 92, 246, 0.06) 50%, transparent 70%),
+        linear-gradient(90deg, transparent 30%, rgba(16, 185, 129, 0.05) 50%, transparent 70%);
+    animation: auroraWave 15s ease-in-out infinite;
+    filter: blur(40px);
+}
+
+@keyframes auroraWave {
+
+    0%,
+    100% {
+        transform: translateX(-10%) translateY(-10%) rotate(0deg);
+    }
+
+    33% {
+        transform: translateX(5%) translateY(5%) rotate(3deg);
+    }
+
+    66% {
+        transform: translateX(-5%) translateY(10%) rotate(-3deg);
+    }
+}
+
+/* Pulse Rings */
+.pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    animation: pulseExpand 4s ease-out infinite;
+}
+
+.pulse-ring-1 {
+    width: 100px;
+    height: 100px;
+    top: 20%;
+    left: 15%;
+    animation-delay: 0s;
+}
+
+.pulse-ring-2 {
+    width: 80px;
+    height: 80px;
+    bottom: 25%;
+    right: 20%;
+    animation-delay: 1.3s;
+}
+
+.pulse-ring-3 {
+    width: 60px;
+    height: 60px;
+    top: 60%;
+    left: 70%;
+    animation-delay: 2.6s;
+}
+
+@keyframes pulseExpand {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Floating Geometric Shapes */
+.shape {
+    position: absolute;
+    opacity: 0.15;
+    animation: floatShape 20s ease-in-out infinite;
+}
+
+.shape-1 {
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(99, 102, 241, 0.5);
+    top: 15%;
+    right: 25%;
+    transform: rotate(45deg);
+}
+
+.shape-2 {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), transparent);
+    border-radius: 50%;
+    bottom: 35%;
+    left: 20%;
+    animation-delay: -5s;
+}
+
+.shape-3 {
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 45px solid rgba(16, 185, 129, 0.2);
+    top: 70%;
+    right: 15%;
+    animation-delay: -10s;
+}
+
+.shape-4 {
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(245, 158, 11, 0.4);
+    border-radius: 8px;
+    top: 40%;
+    left: 8%;
+    animation-delay: -7s;
+    transform: rotate(30deg);
+}
+
+@keyframes floatShape {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-30px) rotate(90deg);
+    }
+
+    50% {
+        transform: translateY(0) rotate(180deg);
+    }
+
+    75% {
+        transform: translateY(30px) rotate(270deg);
+    }
+}
+
+/* Shooting Stars */
+.shooting-star {
+    position: absolute;
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
+    border-radius: 50%;
+    animation: shoot 3s ease-in-out infinite;
+    opacity: 0;
+}
+
+.shooting-star-1 {
+    top: 20%;
+    left: 80%;
+    animation-delay: 0s;
+    transform: rotate(-45deg);
+}
+
+.shooting-star-2 {
+    top: 50%;
+    left: 90%;
+    animation-delay: 1.5s;
+    transform: rotate(-45deg);
+}
+
+.shooting-star-3 {
+    top: 35%;
+    left: 70%;
+    animation-delay: 2.8s;
+    transform: rotate(-45deg);
+}
+
+@keyframes shoot {
+    0% {
+        transform: translateX(0) rotate(-45deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-300px) translateY(300px) rotate(-45deg);
+        opacity: 0;
+    }
+}
+
+/* Floating Dots */
+.dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 50%;
+    animation: floatDot 8s ease-in-out infinite;
+}
+
+.dot-1 {
+    top: 10%;
+    left: 30%;
+    animation-delay: 0s;
+}
+
+.dot-2 {
+    top: 50%;
+    left: 80%;
+    animation-delay: 2s;
+    background: rgba(139, 92, 246, 0.4);
+}
+
+.dot-3 {
+    top: 90%;
+    left: 40%;
+    animation-delay: 4s;
+    background: rgba(16, 185, 129, 0.4);
+}
+
+.dot-4 {
+    top: 30%;
+    left: 55%;
+    animation-delay: 1s;
+    width: 4px;
+    height: 4px;
+}
+
+.dot-5 {
+    top: 65%;
+    left: 25%;
+    animation-delay: 3s;
+    background: rgba(6, 182, 212, 0.4);
+}
+
+.dot-6 {
+    top: 20%;
+    left: 85%;
+    animation-delay: 5s;
+    width: 8px;
+    height: 8px;
+}
+
+@keyframes floatDot {
+
+    0%,
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+
+    25% {
+        transform: translateY(-20px) translateX(10px);
+    }
+
+    50% {
+        transform: translateY(-10px) translateX(-15px);
+    }
+
+    75% {
+        transform: translateY(15px) translateX(5px);
+    }
+}
+
+/* Glow Lines */
+.glow-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+.glow-line-1 {
+    width: 200px;
+    top: 30%;
+    left: 10%;
+    transform: rotate(-15deg);
+    animation-delay: 0s;
+}
+
+.glow-line-2 {
+    width: 150px;
+    bottom: 20%;
+    right: 15%;
+    transform: rotate(25deg);
+    animation-delay: 1s;
+}
+
+.glow-line-3 {
+    width: 180px;
+    top: 60%;
+    left: 50%;
+    transform: rotate(-5deg);
+    animation-delay: 2s;
+}
+
+@keyframes glowPulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}

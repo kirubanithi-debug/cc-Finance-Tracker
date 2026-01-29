@@ -37,9 +37,13 @@ class InvoiceManager {
     /**
      * Load agency details from settings
      */
+    /**
+     * Load agency details from settings
+     */
     async loadAgencyDetails() {
         let settings = {};
         try {
+            // Use getAllSettings - it now intelligently fetches Admin settings for employees
             settings = await dataLayer.getAllSettings();
         } catch (e) {
             console.warn('Failed to load agency settings', e);
@@ -47,13 +51,30 @@ class InvoiceManager {
 
         settings = settings || {};
 
-        document.getElementById('invoiceAgencyName').value = settings.agencyName || '';
-        document.getElementById('invoiceAgencyContact').value = settings.agencyContact || '';
-        document.getElementById('invoiceAgencyAddress').value = settings.agencyAddress || '';
+        // Store for later use (e.g. when saving invoice if fields are hidden/empty)
+        this.agencySettings = settings;
+
+        // Populate fields (even if hidden, so value is there)
+        const nameField = document.getElementById('invoiceAgencyName');
+        const contactField = document.getElementById('invoiceAgencyContact');
+        const addressField = document.getElementById('invoiceAgencyAddress');
+
+        if (nameField) nameField.value = settings.agencyName || '';
+        if (contactField) contactField.value = settings.agencyContact || '';
+        if (addressField) addressField.value = settings.agencyAddress || '';
+
+        // If employee, these fields might be hidden, so we ensure the instance 
+        // has these values stored to inject into the invoice payload if needed.
+        if (settings.agencyLogo) {
+            this.agencyLogo = settings.agencyLogo;
+            const logoPreview = document.getElementById('logoPreview');
+            if (logoPreview) logoPreview.innerHTML = `<img src="${this.agencyLogo}" alt="Agency Logo">`;
+        }
 
         // Set default tax (0 by default, user can set their own)
         const defaultTax = settings.defaultTax !== undefined ? settings.defaultTax : 0;
-        document.getElementById('invoiceTaxPercent').value = defaultTax;
+        const taxField = document.getElementById('invoiceTaxPercent');
+        if (taxField) taxField.value = defaultTax;
     }
 
     /**
@@ -325,12 +346,15 @@ class InvoiceManager {
         const discountAmount = (subtotal * discountPercent) / 100;
         const grandTotal = subtotal + taxAmount - discountAmount;
 
+        // Use form values, fallback to loaded settings (for employees where fields are hidden)
+        const settings = this.agencySettings || {};
+
         return {
             // Agency details
-            agencyLogo: this.agencyLogo,
-            agencyName: document.getElementById('invoiceAgencyName').value,
-            agencyContact: document.getElementById('invoiceAgencyContact').value,
-            agencyAddress: document.getElementById('invoiceAgencyAddress').value,
+            agencyLogo: this.agencyLogo || settings.agencyLogo,
+            agencyName: document.getElementById('invoiceAgencyName').value || settings.agencyName,
+            agencyContact: document.getElementById('invoiceAgencyContact').value || settings.agencyContact,
+            agencyAddress: document.getElementById('invoiceAgencyAddress').value || settings.agencyAddress,
 
             // Client details
             clientName: document.getElementById('invoiceClientName').value,
