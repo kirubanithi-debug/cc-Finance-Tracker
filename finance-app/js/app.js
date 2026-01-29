@@ -510,6 +510,17 @@ class App {
         document.getElementById('dashClearFilters')?.addEventListener('click', () => {
             this.clearDashboardFilters();
         });
+        // Year selectors for charts
+        document.getElementById('dashboardYearSelect').addEventListener('change', (e) => {
+            chartsManager.onYearChange(e.target.value, 'dashboard');
+        });
+
+        document.getElementById('analyticsYearSelect').addEventListener('change', (e) => {
+            chartsManager.onYearChange(e.target.value, 'analytics');
+        });
+
+        // Settings
+        this.bindSettingsEvents();
     }
 
     /**
@@ -532,377 +543,364 @@ class App {
         await this.updateStats();
     }
 
-        // Year selectors for charts
-        document.getElementById('dashboardYearSelect').addEventListener('change', (e) => {
-    chartsManager.onYearChange(e.target.value, 'dashboard');
-});
+    /**
+     * Bind settings page events
+     */
+    bindSettingsEvents() {
+        // Currency change
+        document.getElementById('settingsCurrency').addEventListener('change', async (e) => {
+            window.appCurrency = e.target.value;
+            await dataLayer.setSetting('currency', e.target.value);
+            await this.refreshData();
+            showToast('Currency updated', 'success');
+        });
 
-document.getElementById('analyticsYearSelect').addEventListener('change', (e) => {
-    chartsManager.onYearChange(e.target.value, 'analytics');
-});
+        // Default tax change
+        document.getElementById('settingsDefaultTax').addEventListener('change', async (e) => {
+            await dataLayer.setSetting('defaultTax', e.target.value);
+            showToast('Default tax rate updated', 'success');
+        });
 
-// Settings
-this.bindSettingsEvents();
-    }
+        // Save agency details
+        const saveAgencyBtn = document.getElementById('saveAgencySettings');
+        if (saveAgencyBtn) {
+            saveAgencyBtn.addEventListener('click', async (e) => {
+                // Prevent default if inside form
+                e.preventDefault();
 
-/**
- * Bind settings page events
- */
-bindSettingsEvents() {
-    // Currency change
-    document.getElementById('settingsCurrency').addEventListener('change', async (e) => {
-        window.appCurrency = e.target.value;
-        await dataLayer.setSetting('currency', e.target.value);
-        await this.refreshData();
-        showToast('Currency updated', 'success');
-    });
+                const originalText = saveAgencyBtn.innerHTML;
+                saveAgencyBtn.disabled = true;
+                saveAgencyBtn.innerHTML = '<span class="spinner-small"></span> Saving...';
 
-    // Default tax change
-    document.getElementById('settingsDefaultTax').addEventListener('change', async (e) => {
-        await dataLayer.setSetting('defaultTax', e.target.value);
-        showToast('Default tax rate updated', 'success');
-    });
+                try {
+                    await dataLayer.setSetting('agencyName', document.getElementById('settingsAgencyName').value);
+                    await dataLayer.setSetting('agencyContact', document.getElementById('settingsAgencyContact').value);
+                    await dataLayer.setSetting('agencyEmail', document.getElementById('settingsAgencyEmail').value);
+                    await dataLayer.setSetting('agencyAddress', document.getElementById('settingsAgencyAddress').value);
 
-    // Save agency details
-    const saveAgencyBtn = document.getElementById('saveAgencySettings');
-    if (saveAgencyBtn) {
-        saveAgencyBtn.addEventListener('click', async (e) => {
-            // Prevent default if inside form
-            e.preventDefault();
+                    showToast('Agency details saved successfully', 'success');
+                } catch (error) {
+                    console.error('Failed to save settings:', error);
+                    showToast('Failed to save settings. Please try again.', 'error');
+                } finally {
+                    saveAgencyBtn.disabled = false;
+                    saveAgencyBtn.innerHTML = originalText;
+                }
+            });
+        }
 
-            const originalText = saveAgencyBtn.innerHTML;
-            saveAgencyBtn.disabled = true;
-            saveAgencyBtn.innerHTML = '<span class="spinner-small"></span> Saving...';
+        // Export data
+        document.getElementById('exportDataBtn').addEventListener('click', async () => {
+            const data = await dataLayer.exportData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financeflow_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data exported successfully', 'success');
+        });
+
+        // Import data
+        const importInput = document.getElementById('importDataInput');
+        document.getElementById('importDataBtn').addEventListener('click', () => importInput.click());
+
+        importInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
             try {
-                await dataLayer.setSetting('agencyName', document.getElementById('settingsAgencyName').value);
-                await dataLayer.setSetting('agencyContact', document.getElementById('settingsAgencyContact').value);
-                await dataLayer.setSetting('agencyEmail', document.getElementById('settingsAgencyEmail').value);
-                await dataLayer.setSetting('agencyAddress', document.getElementById('settingsAgencyAddress').value);
-
-                showToast('Agency details saved successfully', 'success');
+                const text = await file.text();
+                const data = JSON.parse(text);
+                await dataLayer.importData(data);
+                await this.refreshData();
+                await chartsManager.updateAllCharts();
+                await invoiceManager.renderInvoiceHistory();
+                showToast('Data imported successfully', 'success');
             } catch (error) {
-                console.error('Failed to save settings:', error);
-                showToast('Failed to save settings. Please try again.', 'error');
-            } finally {
-                saveAgencyBtn.disabled = false;
-                saveAgencyBtn.innerHTML = originalText;
+                console.error('Import error:', error);
+                showToast('Failed to import data', 'error');
             }
+
+            importInput.value = '';
         });
-    }
 
-    // Export data
-    document.getElementById('exportDataBtn').addEventListener('click', async () => {
-        const data = await dataLayer.exportData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `financeflow_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('Data exported successfully', 'success');
-    });
+        // Clear data
+        document.getElementById('clearDataBtn').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete all data? This cannot be undone.')) return;
 
-    // Import data
-    const importInput = document.getElementById('importDataInput');
-    document.getElementById('importDataBtn').addEventListener('click', () => importInput.click());
-
-    importInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        try {
-            const text = await file.text();
-            const data = JSON.parse(text);
-            await dataLayer.importData(data);
+            await dataLayer.clearAll();
             await this.refreshData();
             await chartsManager.updateAllCharts();
             await invoiceManager.renderInvoiceHistory();
-            showToast('Data imported successfully', 'success');
-        } catch (error) {
-            console.error('Import error:', error);
-            showToast('Failed to import data', 'error');
-        }
-
-        importInput.value = '';
-    });
-
-    // Clear data
-    document.getElementById('clearDataBtn').addEventListener('click', async () => {
-        if (!confirm('Are you sure you want to delete all data? This cannot be undone.')) return;
-
-        await dataLayer.clearAll();
-        await this.refreshData();
-        await chartsManager.updateAllCharts();
-        await invoiceManager.renderInvoiceHistory();
-        showToast('All data cleared', 'success');
-    });
-}
+            showToast('All data cleared', 'success');
+        });
+    }
 
     /**
      * Open entry modal for adding/editing
      */
     async openEntryModal(entry = null) {
-    const modal = document.getElementById('entryModal');
-    const title = document.getElementById('modalTitle');
-    const form = document.getElementById('entryForm');
-    const loginNameInput = document.getElementById('entryLoginName');
+        const modal = document.getElementById('entryModal');
+        const title = document.getElementById('modalTitle');
+        const form = document.getElementById('entryForm');
+        const loginNameInput = document.getElementById('entryLoginName');
 
-    // Refresh client dropdowns
-    await clientsManager.populateClientDropdowns();
+        // Refresh client dropdowns
+        await clientsManager.populateClientDropdowns();
 
-    form.reset();
+        form.reset();
 
-    // Get user's name from profile (priority) or fallback to localStorage
-    let userName = '';
-    let isFromProfile = false;
+        // Get user's name from profile (priority) or fallback to localStorage
+        let userName = '';
+        let isFromProfile = false;
 
-    if (window.profileManager && window.profileManager.currentUser &&
-        window.profileManager.currentUser.name &&
-        window.profileManager.currentUser.name !== 'User') {
-        userName = window.profileManager.currentUser.name;
-        isFromProfile = true;
-    } else {
-        // Fallback to localStorage saved name
-        userName = localStorage.getItem('lastLoginName') || '';
+        if (window.profileManager && window.profileManager.currentUser &&
+            window.profileManager.currentUser.name &&
+            window.profileManager.currentUser.name !== 'User') {
+            userName = window.profileManager.currentUser.name;
+            isFromProfile = true;
+        } else {
+            // Fallback to localStorage saved name
+            userName = localStorage.getItem('lastLoginName') || '';
+        }
+
+        // Set the login name field
+        loginNameInput.value = userName;
+
+        // If name comes from profile, make field read-only
+        if (isFromProfile) {
+            loginNameInput.readOnly = true;
+            loginNameInput.style.opacity = '0.7';
+            loginNameInput.style.cursor = 'not-allowed';
+            loginNameInput.title = 'Name from your profile';
+        } else {
+            loginNameInput.readOnly = false;
+            loginNameInput.style.opacity = '1';
+            loginNameInput.style.cursor = 'text';
+            loginNameInput.title = '';
+        }
+
+        if (entry) {
+            title.textContent = 'Edit Finance Entry';
+            document.getElementById('entryId').value = entry.id;
+
+            document.getElementById('entryDate').value = entry.date;
+            document.getElementById('entryClient').value = entry.clientName;
+            document.getElementById('entryDescription').value = entry.description || '';
+            document.getElementById('entryAmount').value = entry.amount;
+            document.getElementById('entryType').value = entry.type;
+            document.getElementById('entryStatus').value = entry.status;
+            document.getElementById('entryPaymentMode').value = entry.paymentMode;
+            // Toggle status field based on saved entry type
+            this.toggleStatusField(entry.type);
+        } else {
+            title.textContent = 'Add Finance Entry';
+            document.getElementById('entryId').value = '';
+            document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+            // Default to income, show status field
+            this.toggleStatusField('income');
+        }
+
+        modal.classList.add('active');
     }
 
-    // Set the login name field
-    loginNameInput.value = userName;
+    /**
+     * Toggle status field visibility based on entry type
+     * Hide status for expenses (expenses are always considered paid/received)
+     */
+    toggleStatusField(type) {
+        const statusGroup = document.getElementById('statusFormGroup');
+        const statusSelect = document.getElementById('entryStatus');
 
-    // If name comes from profile, make field read-only
-    if (isFromProfile) {
-        loginNameInput.readOnly = true;
-        loginNameInput.style.opacity = '0.7';
-        loginNameInput.style.cursor = 'not-allowed';
-        loginNameInput.title = 'Name from your profile';
-    } else {
-        loginNameInput.readOnly = false;
-        loginNameInput.style.opacity = '1';
-        loginNameInput.style.cursor = 'text';
-        loginNameInput.title = '';
+        if (type === 'expense') {
+            // Hide status field for expenses
+            statusGroup.style.display = 'none';
+            statusSelect.removeAttribute('required');
+            // Set status to 'received' for expenses (already paid)
+            statusSelect.value = 'received';
+        } else {
+            // Show status field for income
+            statusGroup.style.display = 'block';
+            statusSelect.setAttribute('required', 'required');
+        }
     }
 
-    if (entry) {
-        title.textContent = 'Edit Finance Entry';
-        document.getElementById('entryId').value = entry.id;
-
-        document.getElementById('entryDate').value = entry.date;
-        document.getElementById('entryClient').value = entry.clientName;
-        document.getElementById('entryDescription').value = entry.description || '';
-        document.getElementById('entryAmount').value = entry.amount;
-        document.getElementById('entryType').value = entry.type;
-        document.getElementById('entryStatus').value = entry.status;
-        document.getElementById('entryPaymentMode').value = entry.paymentMode;
-        // Toggle status field based on saved entry type
-        this.toggleStatusField(entry.type);
-    } else {
-        title.textContent = 'Add Finance Entry';
-        document.getElementById('entryId').value = '';
-        document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
-        // Default to income, show status field
-        this.toggleStatusField('income');
+    /**
+     * Close entry modal
+     */
+    closeEntryModal() {
+        document.getElementById('entryModal').classList.remove('active');
     }
-
-    modal.classList.add('active');
-}
-
-/**
- * Toggle status field visibility based on entry type
- * Hide status for expenses (expenses are always considered paid/received)
- */
-toggleStatusField(type) {
-    const statusGroup = document.getElementById('statusFormGroup');
-    const statusSelect = document.getElementById('entryStatus');
-
-    if (type === 'expense') {
-        // Hide status field for expenses
-        statusGroup.style.display = 'none';
-        statusSelect.removeAttribute('required');
-        // Set status to 'received' for expenses (already paid)
-        statusSelect.value = 'received';
-    } else {
-        // Show status field for income
-        statusGroup.style.display = 'block';
-        statusSelect.setAttribute('required', 'required');
-    }
-}
-
-/**
- * Close entry modal
- */
-closeEntryModal() {
-    document.getElementById('entryModal').classList.remove('active');
-}
 
     /**
      * Save entry (add or update)
      */
     async saveEntry() {
-    const id = document.getElementById('entryId').value;
-    let loginName = '';
+        const id = document.getElementById('entryId').value;
+        let loginName = '';
 
-    // Prioritize name from Profile Manager if available
-    if (window.profileManager && window.profileManager.currentUser && window.profileManager.currentUser.name && window.profileManager.currentUser.name !== 'User') {
-        loginName = window.profileManager.currentUser.name;
-    } else {
-        // Fallback to manual input
-        loginName = document.getElementById('entryLoginName').value.trim();
-    }
-
-    if (!loginName) {
-        showToast('Please enter your name', 'error');
-        return;
-    }
-
-    // Save name for next time (even if from profile, good to cache)
-    localStorage.setItem('lastLoginName', loginName);
-
-    // Determine Role Label
-    const role = await dataLayer.getCurrentUserRole();
-    const roleLabel = role === 'admin' ? 'Admin' : 'Employee';
-    const formattedCreatedBy = `${roleLabel} - ${loginName}`;
-
-    const entry = {
-        date: document.getElementById('entryDate').value,
-        clientName: document.getElementById('entryClient').value,
-        description: document.getElementById('entryDescription').value,
-        amount: parseFloat(document.getElementById('entryAmount').value),
-        type: document.getElementById('entryType').value,
-        status: document.getElementById('entryStatus').value,
-        paymentMode: document.getElementById('entryPaymentMode').value,
-        created_by_name: formattedCreatedBy // Send manual name
-    };
-
-    try {
-        if (id) {
-            await dataLayer.updateEntry(parseInt(id), entry);
-            showToast('Entry updated successfully', 'success');
+        // Prioritize name from Profile Manager if available
+        if (window.profileManager && window.profileManager.currentUser && window.profileManager.currentUser.name && window.profileManager.currentUser.name !== 'User') {
+            loginName = window.profileManager.currentUser.name;
         } else {
-            await dataLayer.addEntry(entry);
-            showToast('Entry added successfully', 'success');
+            // Fallback to manual input
+            loginName = document.getElementById('entryLoginName').value.trim();
         }
 
-        this.closeEntryModal();
-    } catch (error) {
-        console.error('Error saving entry:', error);
-        showToast('Failed to save entry', 'error');
+        if (!loginName) {
+            showToast('Please enter your name', 'error');
+            return;
+        }
+
+        // Save name for next time (even if from profile, good to cache)
+        localStorage.setItem('lastLoginName', loginName);
+
+        // Determine Role Label
+        const role = await dataLayer.getCurrentUserRole();
+        const roleLabel = role === 'admin' ? 'Admin' : 'Employee';
+        const formattedCreatedBy = `${roleLabel} - ${loginName}`;
+
+        const entry = {
+            date: document.getElementById('entryDate').value,
+            clientName: document.getElementById('entryClient').value,
+            description: document.getElementById('entryDescription').value,
+            amount: parseFloat(document.getElementById('entryAmount').value),
+            type: document.getElementById('entryType').value,
+            status: document.getElementById('entryStatus').value,
+            paymentMode: document.getElementById('entryPaymentMode').value,
+            created_by_name: formattedCreatedBy // Send manual name
+        };
+
+        try {
+            if (id) {
+                await dataLayer.updateEntry(parseInt(id), entry);
+                showToast('Entry updated successfully', 'success');
+            } else {
+                await dataLayer.addEntry(entry);
+                showToast('Entry added successfully', 'success');
+            }
+
+            this.closeEntryModal();
+        } catch (error) {
+            console.error('Error saving entry:', error);
+            showToast('Failed to save entry', 'error');
+        }
     }
-}
 
     /**
      * Delete an entry
      */
     async deleteEntry(id) {
-    if (!confirm('Are you sure you want to delete this entry?')) return;
+        if (!confirm('Are you sure you want to delete this entry?')) return;
 
-    try {
-        await dataLayer.deleteEntry(id);
-        showToast('Entry deleted', 'success');
-    } catch (error) {
-        console.error('Error deleting entry:', error);
-        showToast('Failed to delete entry', 'error');
+        try {
+            await dataLayer.deleteEntry(id);
+            showToast('Entry deleted', 'success');
+        } catch (error) {
+            console.error('Error deleting entry:', error);
+            showToast('Failed to delete entry', 'error');
+        }
     }
-}
 
     /**
      * Apply current filters
      */
     async applyFilters() {
-    await this.renderEntriesTable();
-}
+        await this.renderEntriesTable();
+    }
 
     /**
      * Clear all filters
      */
     async clearFilters() {
-    this.filters = {
-        startDate: '',
-        endDate: '',
-        month: '',
-        year: '',
-        type: '',
-        status: '',
-        paymentMode: '',
-        search: ''
-    };
+        this.filters = {
+            startDate: '',
+            endDate: '',
+            month: '',
+            year: '',
+            type: '',
+            status: '',
+            paymentMode: '',
+            search: ''
+        };
 
-    document.getElementById('filterStartDate').value = '';
-    document.getElementById('filterEndDate').value = '';
-    document.getElementById('filterMonth').value = '';
-    document.getElementById('filterYear').value = '';
-    document.getElementById('filterType').value = '';
-    document.getElementById('filterStatus').value = '';
-    document.getElementById('filterPaymentMode').value = '';
-    document.getElementById('globalSearch').value = '';
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+        document.getElementById('filterMonth').value = '';
+        document.getElementById('filterYear').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterPaymentMode').value = '';
+        document.getElementById('globalSearch').value = '';
 
-    await this.renderEntriesTable();
-}
+        await this.renderEntriesTable();
+    }
 
     /**
      * Handle data changes
      */
     async onDataChange() {
-    await this.refreshData();
-    await chartsManager.updateAllCharts();
-}
+        await this.refreshData();
+        await chartsManager.updateAllCharts();
+    }
 
     /**
      * Refresh all data
      */
     async refreshData() {
-    await this.updateStats();
-    await this.renderRecentTransactions();
-    await this.renderEntriesTable();
-    if (this.isAdmin) {
-        await this.renderPendingApprovals();
+        await this.updateStats();
+        await this.renderRecentTransactions();
+        await this.renderEntriesTable();
+        if (this.isAdmin) {
+            await this.renderPendingApprovals();
+        }
     }
-}
 
     /**
      * Update dashboard stats
      */
     async updateStats() {
-    // Use dashboard filters if available, otherwise default to empty
-    const filters = this.dashboardFilters || {};
+        // Use dashboard filters if available, otherwise default to empty
+        const filters = this.dashboardFilters || {};
 
-    // Pass filters to data layer
-    const summary = await dataLayer.getFinancialSummary(filters);
-    const currency = window.appCurrency;
+        // Pass filters to data layer
+        const summary = await dataLayer.getFinancialSummary(filters);
+        const currency = window.appCurrency;
 
-    document.getElementById('totalIncome').textContent = formatCurrency(summary.totalIncome, currency);
-    document.getElementById('totalExpense').textContent = formatCurrency(summary.totalExpense, currency);
-    document.getElementById('pendingAmount').textContent = formatCurrency(summary.pendingAmount, currency);
-    document.getElementById('netBalance').textContent = formatCurrency(summary.netBalance, currency);
+        document.getElementById('totalIncome').textContent = formatCurrency(summary.totalIncome, currency);
+        document.getElementById('totalExpense').textContent = formatCurrency(summary.totalExpense, currency);
+        document.getElementById('pendingAmount').textContent = formatCurrency(summary.pendingAmount, currency);
+        document.getElementById('netBalance').textContent = formatCurrency(summary.netBalance, currency);
 
-    const availableEl = document.getElementById('availableBalance');
-    if (availableEl) {
-        availableEl.textContent = formatCurrency(summary.availableBalance, currency);
+        const availableEl = document.getElementById('availableBalance');
+        if (availableEl) {
+            availableEl.textContent = formatCurrency(summary.availableBalance, currency);
+        }
     }
-}
 
     /**
      * Render recent transactions on dashboard
      */
     async renderRecentTransactions() {
-    const entries = await dataLayer.getAllEntries();
-    const recent = entries.slice(0, 5);
-    const tbody = document.getElementById('recentTransactions');
-    const currency = window.appCurrency;
+        const entries = await dataLayer.getAllEntries();
+        const recent = entries.slice(0, 5);
+        const tbody = document.getElementById('recentTransactions');
+        const currency = window.appCurrency;
 
-    if (recent.length === 0) {
-        tbody.innerHTML = `
+        if (recent.length === 0) {
+            tbody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
                         No transactions yet
                     </td>
                 </tr>
             `;
-        return;
-    }
+            return;
+        }
 
-    tbody.innerHTML = recent.map(entry => `
+        tbody.innerHTML = recent.map(entry => `
             <tr>
                 <td>${formatDate(entry.date)}</td>
                 <td>${entry.clientName}</td>
@@ -915,25 +913,25 @@ closeEntryModal() {
                 <td>${entry.createdByName || '-'}</td>
             </tr>
         `).join('');
-}
+    }
 
     /**
      * Render entries table on Finance Entries page
      */
     async renderEntriesTable() {
-    const entries = await dataLayer.getFilteredEntries(this.filters);
-    const tbody = document.getElementById('financeEntriesBody');
-    const emptyState = document.getElementById('entriesEmptyState');
-    const currency = window.appCurrency;
+        const entries = await dataLayer.getFilteredEntries(this.filters);
+        const tbody = document.getElementById('financeEntriesBody');
+        const emptyState = document.getElementById('entriesEmptyState');
+        const currency = window.appCurrency;
 
-    if (entries.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-    }
+        if (entries.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
 
-    emptyState.style.display = 'none';
-    tbody.innerHTML = entries.map(entry => `
+        emptyState.style.display = 'none';
+        tbody.innerHTML = entries.map(entry => `
             <tr>
                 <td>${formatDate(entry.date)}</td>
                 <td>${entry.clientName}</td>
@@ -968,104 +966,104 @@ closeEntryModal() {
             </tr>
         `).join('');
 
-    // Bind edit/delete buttons
-    tbody.querySelectorAll('.action-btn.edit').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const entry = await dataLayer.getEntry(parseInt(btn.dataset.id));
-            this.openEntryModal(entry);
+        // Bind edit/delete buttons
+        tbody.querySelectorAll('.action-btn.edit').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const entry = await dataLayer.getEntry(parseInt(btn.dataset.id));
+                this.openEntryModal(entry);
+            });
         });
-    });
 
-    tbody.querySelectorAll('.action-btn.delete').forEach(btn => {
-        btn.addEventListener('click', () => {
-            this.deleteEntry(parseInt(btn.dataset.id));
+        tbody.querySelectorAll('.action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.deleteEntry(parseInt(btn.dataset.id));
+            });
         });
-    });
-}
+    }
 
     /**
      * Setup role-based UI visibility
      */
     async setupRoleBasedUI() {
-    try {
-        this.isAdmin = await dataLayer.isAdmin();
+        try {
+            this.isAdmin = await dataLayer.isAdmin();
 
-        // Store role in localStorage for quick access
-        localStorage.setItem('userRole', this.isAdmin ? 'admin' : 'employee');
+            // Store role in localStorage for quick access
+            localStorage.setItem('userRole', this.isAdmin ? 'admin' : 'employee');
 
-        // 1. Show/Hide Admin-Only elements (General)
-        document.querySelectorAll('.admin-only').forEach(el => {
-            el.style.display = this.isAdmin ? '' : 'none';
-        });
+            // 1. Show/Hide Admin-Only elements (General)
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = this.isAdmin ? '' : 'none';
+            });
 
-        // 2. Hide Dashboard and Analytics for Employees
-        // 3. Redirect if they are on those pages
-        if (!this.isAdmin) {
-            // Hide Nav Items
-            const dashboardNav = document.querySelector('a[data-page="dashboard"]')?.parentElement;
-            const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
+            // 2. Hide Dashboard and Analytics for Employees
+            // 3. Redirect if they are on those pages
+            if (!this.isAdmin) {
+                // Hide Nav Items
+                const dashboardNav = document.querySelector('a[data-page="dashboard"]')?.parentElement;
+                const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
 
-            if (dashboardNav) dashboardNav.style.display = 'none';
-            if (analyticsNav) analyticsNav.style.display = 'none';
+                if (dashboardNav) dashboardNav.style.display = 'none';
+                if (analyticsNav) analyticsNav.style.display = 'none';
 
-            // Redirect to Entries if currently on restricted page OR default home page (dashboard)
-            if (this.currentPage === 'dashboard' || this.currentPage === 'analytics') {
-                console.log('Employee detected on restricted page, redirecting to Entries...');
-                this.navigateTo('entries');
+                // Redirect to Entries if currently on restricted page OR default home page (dashboard)
+                if (this.currentPage === 'dashboard' || this.currentPage === 'analytics') {
+                    console.log('Employee detected on restricted page, redirecting to Entries...');
+                    this.navigateTo('entries');
+                }
+            } else {
+                // Check if we need to show them (in case role changed dynamically without reload)
+                const dashboardNav = document.querySelector('a[data-page="dashboard"]')?.parentElement;
+                const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
+                if (dashboardNav) dashboardNav.style.display = '';
+                if (analyticsNav) analyticsNav.style.display = '';
             }
-        } else {
-            // Check if we need to show them (in case role changed dynamically without reload)
-            const dashboardNav = document.querySelector('a[data-page="dashboard"]')?.parentElement;
-            const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
-            if (dashboardNav) dashboardNav.style.display = '';
-            if (analyticsNav) analyticsNav.style.display = '';
-        }
 
-        // Update profile badge to show role
-        const roleBadge = document.querySelector('.profile-badges .badge-primary');
-        if (roleBadge) {
-            roleBadge.textContent = this.isAdmin ? 'Admin' : 'Employee';
-        }
+            // Update profile badge to show role
+            const roleBadge = document.querySelector('.profile-badges .badge-primary');
+            if (roleBadge) {
+                roleBadge.textContent = this.isAdmin ? 'Admin' : 'Employee';
+            }
 
-        console.log(`User role: ${this.isAdmin ? 'Admin' : 'Employee'}`);
-    } catch (error) {
-        console.error('Error setting up role-based UI:', error);
-        // Default to minimal access on error
-        this.isAdmin = false;
+            console.log(`User role: ${this.isAdmin ? 'Admin' : 'Employee'}`);
+        } catch (error) {
+            console.error('Error setting up role-based UI:', error);
+            // Default to minimal access on error
+            this.isAdmin = false;
+        }
     }
-}
 
     /**
      * Render pending approvals section (admin only)
      */
     async renderPendingApprovals() {
-    if (!this.isAdmin) return;
+        if (!this.isAdmin) return;
 
-    const container = document.getElementById('pendingEntriesList');
-    const countBadge = document.getElementById('pendingCount');
-    const section = document.getElementById('pendingApprovalsSection');
-    const currency = window.appCurrency;
+        const container = document.getElementById('pendingEntriesList');
+        const countBadge = document.getElementById('pendingCount');
+        const section = document.getElementById('pendingApprovalsSection');
+        const currency = window.appCurrency;
 
-    if (!container || !section) return;
+        if (!container || !section) return;
 
-    try {
-        const pendingEntries = await dataLayer.getPendingEntries();
+        try {
+            const pendingEntries = await dataLayer.getPendingEntries();
 
-        if (countBadge) {
-            countBadge.textContent = pendingEntries.length;
-        }
+            if (countBadge) {
+                countBadge.textContent = pendingEntries.length;
+            }
 
-        if (pendingEntries.length === 0) {
-            section.style.display = 'none';
-            return;
-        }
+            if (pendingEntries.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
 
-        section.style.display = 'block';
+            section.style.display = 'block';
 
-        container.innerHTML = pendingEntries.map(entry => {
-            const isDeletion = entry.deletionRequested;
+            container.innerHTML = pendingEntries.map(entry => {
+                const isDeletion = entry.deletionRequested;
 
-            return `
+                return `
                 <div class="pending-entry-card" data-id="${entry.id}" style="${isDeletion ? 'border: 1px solid var(--color-danger); background: rgba(239, 68, 68, 0.05);' : ''}">
                     <div class="pending-entry-info">
                         ${isDeletion ? '<div style="color: var(--color-danger); font-weight: bold; margin-bottom: 5px; font-size: 0.8rem;">⚠️ DELETION REQUESTED</div>' : ''}
@@ -1101,58 +1099,58 @@ closeEntryModal() {
                     </div>
                 </div>
             `;
-        }).join('');
+            }).join('');
 
-        // Bind approve/confirm buttons
-        container.querySelectorAll('.btn-approve').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                const type = btn.dataset.type;
-                try {
-                    if (type === 'delete') {
-                        if (!confirm('Confirm deletion of this entry? This cannot be undone.')) return;
-                        await dataLayer.deleteEntry(id); // Admin delete = actual delete
-                        showToast('Entry deleted successfully', 'success');
-                    } else {
-                        await dataLayer.approveEntry(id);
-                        showToast('Entry approved successfully', 'success');
+            // Bind approve/confirm buttons
+            container.querySelectorAll('.btn-approve').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.dataset.id;
+                    const type = btn.dataset.type;
+                    try {
+                        if (type === 'delete') {
+                            if (!confirm('Confirm deletion of this entry? This cannot be undone.')) return;
+                            await dataLayer.deleteEntry(id); // Admin delete = actual delete
+                            showToast('Entry deleted successfully', 'success');
+                        } else {
+                            await dataLayer.approveEntry(id);
+                            showToast('Entry approved successfully', 'success');
+                        }
+                        await this.renderPendingApprovals();
+                        await this.refreshData();
+                    } catch (error) {
+                        console.error('Error action:', error);
+                        showToast('Action failed', 'error');
                     }
-                    await this.renderPendingApprovals();
-                    await this.refreshData();
-                } catch (error) {
-                    console.error('Error action:', error);
-                    showToast('Action failed', 'error');
-                }
+                });
             });
-        });
 
-        // Bind decline/cancel buttons
-        container.querySelectorAll('.btn-decline').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                const type = btn.dataset.type;
-                try {
-                    if (type === 'cancel') {
-                        await dataLayer.declineDeletionRequest(id);
-                        showToast('Deletion request cancelled', 'info');
-                    } else {
-                        if (!confirm('Are you sure you want to decline this entry?')) return;
-                        await dataLayer.declineEntry(id);
-                        showToast('Entry declined', 'info');
+            // Bind decline/cancel buttons
+            container.querySelectorAll('.btn-decline').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.dataset.id;
+                    const type = btn.dataset.type;
+                    try {
+                        if (type === 'cancel') {
+                            await dataLayer.declineDeletionRequest(id);
+                            showToast('Deletion request cancelled', 'info');
+                        } else {
+                            if (!confirm('Are you sure you want to decline this entry?')) return;
+                            await dataLayer.declineEntry(id);
+                            showToast('Entry declined', 'info');
+                        }
+                        await this.renderPendingApprovals();
+                        await this.refreshData();
+                    } catch (error) {
+                        console.error('Error declining:', error);
+                        showToast('Action failed', 'error');
                     }
-                    await this.renderPendingApprovals();
-                    await this.refreshData();
-                } catch (error) {
-                    console.error('Error declining:', error);
-                    showToast('Action failed', 'error');
-                }
+                });
             });
-        });
 
-    } catch (error) {
-        console.error('Error rendering pending approvals:', error);
+        } catch (error) {
+            console.error('Error rendering pending approvals:', error);
+        }
     }
-}
 }
 
 /**

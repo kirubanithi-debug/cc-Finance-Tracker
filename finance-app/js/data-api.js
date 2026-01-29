@@ -1356,33 +1356,5 @@ const DATA_STORES = {
 // Create and export singleton instance
 const dataLayer = new DataLayerAPI();
 
-// Helper functions for formatting (kept from original)
-const formatCurrency = (amount, currency = '₹') => {
-    const num = parseFloat(amount) || 0;
-    return `${currency}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-};
-
-const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-};
-
-const formatPaymentMode = (mode) => {
-    const modes = {
-        cash: 'Cash',
-        upi: 'UPI',
-        bank_transfer: 'Bank Transfer',
-        card: 'Card',
-        cheque: 'Cheque',
-        unknown: 'Unspecified'
-    };
-    return modes[mode] || mode;
-};
-
-const formatStatus = (status) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-};
+// Helper functions for formatting are in main.js
+// Removed to avoid re-declaration errors
