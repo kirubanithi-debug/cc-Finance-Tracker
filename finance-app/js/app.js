@@ -863,7 +863,7 @@ class App {
             this.closeEntryModal();
         } catch (error) {
             console.error('Error saving entry:', error);
-            showToast('Failed to save entry', 'error');
+            showToast('Failed to save: ' + (error.message || 'Unknown error'), 'error');
         }
     }
 
