@@ -644,22 +644,23 @@ table {
     margin-bottom: var(--spacing-xl);
 }
 
-@media (max-width: 1200px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+
 
 .stat-card {
     background: var(--color-bg-card);
     border-radius: var(--radius-xl);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-md);
+    /* Reduced padding */
     display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-lg);
+    align-items: center;
+    /* Center align items vertically */
+    gap: var(--spacing-sm);
+    /* Reduced gap */
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border);
     transition: all var(--transition-fast);
+    min-width: 0;
+    /* Critical: allows card to shrink below content size to prevent grid blowout */
 }
 
 .stat-card:hover {
@@ -668,8 +669,8 @@ table {
 }
 
 .stat-icon {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
@@ -678,8 +679,8 @@ table {
 }
 
 .stat-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
 }
 
 .stat-card.income .stat-icon {
