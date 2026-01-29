@@ -61,7 +61,11 @@ class NotificationsManager {
 
         if (emptyState) emptyState.classList.add('hidden');
 
-        list.innerHTML = this.notifications.map(n => `
+        list.innerHTML = this.notifications.map(n => {
+            const isPasswordRequest = n.type === 'password_reset_request';
+            const metadata = n.metadata || {};
+
+            return `
             <div class="notification-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
                 <div class="notification-icon ${n.type}">
                     ${this.getIcon(n.type)}
@@ -73,16 +77,20 @@ class NotificationsManager {
                     </div>
                     <p>${n.message}</p>
                     <div class="notification-actions">
+                        ${isPasswordRequest && !n.is_read ?
+                    `<button class="btn btn-sm btn-primary" onclick="notificationsManager.approvePasswordReset(${n.id}, '${metadata.email || ''}')">Approve Reset</button>`
+                    : ''}
                         ${!n.is_read ? `<button class="btn-text" onclick="notificationsManager.markAsRead(${n.id})">Mark as read</button>` : ''}
                         <button class="btn-text danger" onclick="notificationsManager.delete(${n.id})">Delete</button>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     getIcon(type) {
         switch (type) {
+            case 'password_reset_request':
             case 'password_reset':
                 return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>';
             case 'error':
@@ -92,48 +100,35 @@ class NotificationsManager {
         }
     }
 
-    formatTime(dateStr) {
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diff = now - date;
+    // ... formatTime ...
 
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-        return date.toLocaleDateString();
-    }
+    async approvePasswordReset(id, email) {
+        if (!email) {
+            showToast('Error: No email attached to this request', 'error');
+            return;
+        }
 
-    async markAsRead(id) {
+        if (!confirm(`Are you sure you want to approve password reset for ${email}? This will send them a password reset email.`)) return;
+
         try {
-            await dataLayer.markNotificationAsRead(id);
-            await this.loadNotifications();
-        } catch (e) {
-            console.error(e);
+            // Trigger the reset email as Admin
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password.html',
+            });
+
+            if (error) throw error;
+
+            showToast(`Password reset approved. Email sent to ${email}`, 'success');
+
+            // Mark notification as read
+            await this.markAsRead(id);
+        } catch (error) {
+            console.error('Approval failed:', error);
+            showToast(`Failed to send reset email: ${error.message}`, 'error');
         }
     }
 
-    async markAllAsRead() {
-        try {
-            const unread = this.notifications.filter(n => !n.is_read);
-            for (const n of unread) {
-                await dataLayer.markNotificationAsRead(n.id);
-            }
-            await this.loadNotifications();
-            showToast('All notifications marked as read', 'success');
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    async delete(id) {
-        if (!confirm('Delete this notification?')) return;
-        try {
-            await dataLayer.deleteNotification(id);
-            await this.loadNotifications();
-        } catch (e) {
-            console.error(e);
-        }
-    }
+    // ... markAsRead, markAllAsRead, delete ...
 }
 
 window.notificationsManager = new NotificationsManager();

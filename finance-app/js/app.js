@@ -1006,13 +1006,43 @@ class App {
                 if (dashboardNav) dashboardNav.style.display = 'none';
                 if (analyticsNav) analyticsNav.style.display = 'none';
 
+                // Handle Agency Details for Employees (Visible but Read-Only)
+                const agencySection = document.getElementById('agencyDetailsSection');
+                if (agencySection) {
+                    // Start by showing it (in case it was hidden by generic rules previously)
+                    agencySection.style.display = 'block';
+
+                    // Make inputs read-only
+                    agencySection.querySelectorAll('input, textarea').forEach(input => {
+                        input.disabled = true;
+                        input.style.backgroundColor = 'var(--color-bg-secondary)'; // Visual clue
+                        input.style.cursor = 'not-allowed';
+                    });
+
+                    // Hide Save Button
+                    const saveBtn = agencySection.querySelector('#saveAgencySettings');
+                    if (saveBtn) saveBtn.style.display = 'none';
+                }
+
                 // Redirect to Entries if currently on restricted page OR default home page (dashboard)
                 if (this.currentPage === 'dashboard' || this.currentPage === 'analytics') {
                     console.log('Employee detected on restricted page, redirecting to Entries...');
                     this.navigateTo('entries');
                 }
             } else {
-                // Check if we need to show them (in case role changed dynamically without reload)
+                // Admin: Ensure Agency Details are editable
+                const agencySection = document.getElementById('agencyDetailsSection');
+                if (agencySection) {
+                    agencySection.querySelectorAll('input, textarea').forEach(input => {
+                        input.disabled = false;
+                        input.style.backgroundColor = '';
+                        input.style.cursor = '';
+                    });
+                    const saveBtn = agencySection.querySelector('#saveAgencySettings');
+                    if (saveBtn) saveBtn.style.display = '';
+                }
+
+                // Check if we need to show nav items (in case role changed dynamically without reload)
                 const dashboardNav = document.querySelector('a[data-page="dashboard"]')?.parentElement;
                 const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
                 if (dashboardNav) dashboardNav.style.display = '';
