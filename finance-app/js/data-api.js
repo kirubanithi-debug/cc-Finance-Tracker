@@ -143,6 +143,14 @@ class DataLayerAPI {
     }
 
     /**
+     * Get current user object
+     */
+    async getCurrentUser() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        return session?.user || null;
+    }
+
+    /**
      * Get current user ID
      */
     async getCurrentUserId() {
