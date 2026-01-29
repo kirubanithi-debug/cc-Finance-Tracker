@@ -196,8 +196,7 @@ class App {
         const yearSelectIds = [
             'dashFilterYear',
             'filterYear',
-            'analyticsYearSelect',
-            'dashboardYearSelect'
+            'analyticsYearSelect'
         ];
 
         const startYear = 2024;
@@ -467,7 +466,24 @@ class App {
         const cancelEntry = document.getElementById('cancelEntry');
         const entryForm = document.getElementById('entryForm');
 
-        addEntryBtn.addEventListener('click', () => this.openEntryModal());
+        addEntryBtn.addEventListener('click', () => {
+            this.openEntryModal();
+            // Reset toggle visibility on open
+            const typeSelect = document.getElementById('entryType');
+            const toggleWrapper = document.getElementById('pettyCashToggleWrapper');
+            if (typeSelect && toggleWrapper) {
+                toggleWrapper.style.display = typeSelect.value === 'expense' ? 'flex' : 'none';
+            }
+        });
+
+        // Ensure Petty Cash Toggle overrides
+        const typeSelect = document.getElementById('entryType');
+        const toggleWrapper = document.getElementById('pettyCashToggleWrapper');
+        if (typeSelect && toggleWrapper) {
+            typeSelect.addEventListener('change', () => {
+                toggleWrapper.style.display = typeSelect.value === 'expense' ? 'flex' : 'none';
+            });
+        }
         closeModal.addEventListener('click', () => this.closeEntryModal());
         cancelEntry.addEventListener('click', () => this.closeEntryModal());
 
