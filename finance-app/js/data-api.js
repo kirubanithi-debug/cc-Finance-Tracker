@@ -210,6 +210,13 @@ class DataLayerAPI {
      * If user is admin, returns their own ID
      * If user is employee, returns their linked admin's ID
      */
+    async getUserInfo() {
+        return {
+            userId: await this.getCurrentUserId(),
+            adminId: await this.getAdminId()
+        };
+    }
+
     async getAdminId() {
         const userId = await this.getCurrentUserId();
         const userRole = await this.getCurrentUserRole();
