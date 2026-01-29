@@ -111,3 +111,45 @@ SELECT setval('finance_entries_id_seq', (SELECT MAX(id) FROM finance_entries));
 CREATE INDEX IF NOT EXISTS idx_finance_entries_user_id ON finance_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_finance_entries_admin_id ON finance_entries(admin_id);
 CREATE INDEX IF NOT EXISTS idx_finance_entries_is_petty_cash ON finance_entries(is_petty_cash);
+
+-- 5. SETTINGS VISIBILITY FIX
+-- Employees need to see Admin's settings (Agency Name/Logo for Invoices)
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+
+-- Drop legacy/duplicate policies
+DROP POLICY IF EXISTS "settings_select" ON settings;
+DROP POLICY IF EXISTS "settings_insert" ON settings;
+DROP POLICY IF EXISTS "settings_update" ON settings;
+DROP POLICY IF EXISTS "settings_delete" ON settings;
+DROP POLICY IF EXISTS "Team can view settings" ON settings;
+DROP POLICY IF EXISTS "Admins can manage settings" ON settings;
+DROP POLICY IF EXISTS "Admins manage settings" ON settings; -- Explicitly drop policy named in warning
+DROP POLICY IF EXISTS "Admins insert settings" ON settings;
+DROP POLICY IF EXISTS "Admins update settings" ON settings;
+DROP POLICY IF EXISTS "Admins delete settings" ON settings;
+DROP POLICY IF EXISTS "View team settings" ON settings;
+DROP POLICY IF EXISTS "View team settings" ON settings;
+
+-- Policy 1: Everyone in the team (Admin + Employees) can VIEW the team's settings
+CREATE POLICY "View team settings" ON settings
+    FOR SELECT
+    USING (
+        admin_id = (select auth.uid()) 
+        OR 
+        admin_id IN (SELECT admin_id FROM employees WHERE user_id = (select auth.uid()))
+    );
+
+-- Policy 2: Only Admins can INSERT/UPDATE/DELETE
+-- Usage of FOR ALL created an overlap on SELECT with the "View team settings" policy.
+-- Splitting it eliminates the warning.
+CREATE POLICY "Admins insert settings" ON settings
+    FOR INSERT
+    WITH CHECK (admin_id = (select auth.uid()));
+
+CREATE POLICY "Admins update settings" ON settings
+    FOR UPDATE
+    USING (admin_id = (select auth.uid()));
+
+CREATE POLICY "Admins delete settings" ON settings
+    FOR DELETE
+    USING (admin_id = (select auth.uid()));

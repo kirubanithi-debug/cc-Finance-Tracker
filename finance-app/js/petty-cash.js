@@ -36,36 +36,74 @@ class PettyCashManager {
         const toggleInput = document.getElementById('addToPettyCashToggle');
         const clientSelect = document.getElementById('entryClient'); // In entry form
 
-        // NEW: Add Funds Button Logic
+        // NEW: Add Funds Button Logic (Simplified Dedicated Modal)
         const addFundBtn = document.getElementById('addPettyCashFundBtn');
-        if (addFundBtn) {
+        const fundModal = document.getElementById('pettyCashFundModal');
+        const fundForm = document.getElementById('pettyCashFundForm');
+
+        if (addFundBtn && fundModal) {
             addFundBtn.addEventListener('click', () => {
-                if (window.app && window.app.openEntryModal) {
-                    window.app.openEntryModal();
-
-                    // Auto-configure for Funding
-                    setTimeout(() => {
-                        const typeSelect = document.getElementById('entryType');
-                        const toggleInput = document.getElementById('addToPettyCashToggle');
-                        const descInput = document.getElementById('entryDescription');
-
-                        if (typeSelect) {
-                            typeSelect.value = 'expense';
-                            typeSelect.dispatchEvent(new Event('change'));
-                        }
-
-                        // Small delay to allow toggle visibility to update
-                        setTimeout(() => {
-                            if (toggleInput) {
-                                toggleInput.checked = true;
-                                toggleInput.dispatchEvent(new Event('change'));
-                            }
-                        }, 50);
-
-                        if (descInput) descInput.value = 'Petty Cash Replenishment';
-                    }, 100);
+                if (fundForm) {
+                    fundForm.reset();
+                    // Set default description
+                    const desc = document.getElementById('pcfDescription');
+                    if (desc) desc.value = 'Petty Cash Replenishment';
                 }
+                fundModal.classList.add('active');
             });
+
+            // Close Logic
+            const closeBtn = document.getElementById('closePettyCashFundModal');
+            const cancelBtn = document.getElementById('cancelPettyCashFund');
+            const closeFundModal = () => fundModal.classList.remove('active');
+
+            if (closeBtn) closeBtn.addEventListener('click', closeFundModal);
+            if (cancelBtn) cancelBtn.addEventListener('click', closeFundModal);
+            fundModal.addEventListener('click', (e) => {
+                if (e.target === fundModal) closeFundModal();
+            });
+
+            // Submit Logic
+            if (fundForm) {
+                // Remove old listeners to avoid duplicates if re-bound? 
+                // bindEvents usually runs once. Safe.
+                fundForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const submitBtn = fundForm.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = 'Adding...';
+
+                    try {
+                        const amount = parseFloat(document.getElementById('pcfAmount').value);
+                        const description = document.getElementById('pcfDescription').value;
+                        const paymentMode = document.getElementById('pcfPaymentMode').value;
+
+                        const entry = {
+                            date: new Date().toISOString().split('T')[0],
+                            client: 'Petty Cash',
+                            description: description,
+                            amount: amount,
+                            type: 'expense',
+                            status: 'pending', // data-api will auto-approve for admin
+                            paymentMode: paymentMode,
+                            isPettyCash: true
+                        };
+
+                        await dataLayer.addEntry(entry);
+                        showToast('Funds added successfully', 'success');
+                        closeFundModal();
+                        this.refreshData(); // Refresh UI to show new balance
+                    } catch (error) {
+                        console.error('Failed to add funds:', error);
+                        showToast('Failed to add funds: ' + error.message, 'error');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                });
+            }
         }
 
         if (typeSelect && toggleWrapper) {
