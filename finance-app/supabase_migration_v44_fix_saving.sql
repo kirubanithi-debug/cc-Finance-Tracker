@@ -26,15 +26,20 @@ CREATE POLICY "Users can insert own entries" ON finance_entries
 -- CONSOLIDATED SELECT POLICY (Own Entries + Team Petty Cash Allocations)
 DROP POLICY IF EXISTS "Users can view own entries" ON finance_entries;
 DROP POLICY IF EXISTS "Team can view petty cash allocations" ON finance_entries;
+DROP POLICY IF EXISTS "Users can view relevant entries" ON finance_entries;
 
 CREATE POLICY "Users can view relevant entries" ON finance_entries
     FOR SELECT 
     USING (
         ((select auth.uid()) = user_id) OR 
         (admin_id = (select auth.uid())) OR
-        (is_petty_cash = true AND admin_id IN (
-            SELECT admin_id FROM employees WHERE user_id = (select auth.uid())
-        ))
+        (
+            (is_petty_cash = true OR client_name = 'Petty Cash') 
+            AND 
+            admin_id IN (
+                SELECT admin_id FROM employees WHERE user_id = (select auth.uid())
+            )
+        )
     );
 
 DROP POLICY IF EXISTS "Users can update own entries" ON finance_entries;
@@ -60,6 +65,12 @@ DROP POLICY IF EXISTS "Users can view petty cash" ON petty_cash_entries;
 DROP POLICY IF EXISTS "Admins can delete petty cash" ON petty_cash_entries;
 DROP POLICY IF EXISTS "Employees can spend petty cash" ON petty_cash_entries;
 DROP POLICY IF EXISTS "Employees can manage own petty cash entries" ON petty_cash_entries;
+
+-- Drop newly created policies to allow re-run updates
+DROP POLICY IF EXISTS "View petty cash entries" ON petty_cash_entries;
+DROP POLICY IF EXISTS "Insert petty cash entries" ON petty_cash_entries;
+DROP POLICY IF EXISTS "Manage petty cash entries" ON petty_cash_entries;
+DROP POLICY IF EXISTS "Update petty cash entries" ON petty_cash_entries;
 
 ALTER TABLE petty_cash_entries ENABLE ROW LEVEL SECURITY;
 

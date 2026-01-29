@@ -36,6 +36,38 @@ class PettyCashManager {
         const toggleInput = document.getElementById('addToPettyCashToggle');
         const clientSelect = document.getElementById('entryClient'); // In entry form
 
+        // NEW: Add Funds Button Logic
+        const addFundBtn = document.getElementById('addPettyCashFundBtn');
+        if (addFundBtn) {
+            addFundBtn.addEventListener('click', () => {
+                if (window.app && window.app.openEntryModal) {
+                    window.app.openEntryModal();
+
+                    // Auto-configure for Funding
+                    setTimeout(() => {
+                        const typeSelect = document.getElementById('entryType');
+                        const toggleInput = document.getElementById('addToPettyCashToggle');
+                        const descInput = document.getElementById('entryDescription');
+
+                        if (typeSelect) {
+                            typeSelect.value = 'expense';
+                            typeSelect.dispatchEvent(new Event('change'));
+                        }
+
+                        // Small delay to allow toggle visibility to update
+                        setTimeout(() => {
+                            if (toggleInput) {
+                                toggleInput.checked = true;
+                                toggleInput.dispatchEvent(new Event('change'));
+                            }
+                        }, 50);
+
+                        if (descInput) descInput.value = 'Petty Cash Replenishment';
+                    }, 100);
+                }
+            });
+        }
+
         if (typeSelect && toggleWrapper) {
             // Function to handle visibility
             const updateToggleVisibility = () => {
