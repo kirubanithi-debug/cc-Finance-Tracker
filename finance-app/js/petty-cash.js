@@ -8,12 +8,14 @@
 
 const pettyCashManager = {
     entries: [],
+    employees: [],
     balance: 0,
 
     async init() {
         console.log('Initializing Petty Cash Manager...');
         this.cacheDOM();
         this.bindEvents();
+        await this.loadEmployees();
         await this.loadData();
     },
 
@@ -39,7 +41,10 @@ const pettyCashManager = {
             closeFundBtn: document.getElementById('closePettyCashFundModal'),
             closeExpenseBtn: document.getElementById('closePettyCashExpenseModal'),
             cancelFundBtn: document.getElementById('cancelPettyCashFund'),
-            cancelExpenseBtn: document.getElementById('cancelPettyCashExpense')
+            cancelExpenseBtn: document.getElementById('cancelPettyCashExpense'),
+
+            // Inputs
+            employeeSelect: document.getElementById('pcExpenseEmployee')
         };
     },
 
@@ -78,9 +83,17 @@ const pettyCashManager = {
     openModal(type) {
         if (type === 'fund' && this.dom.fundModal) {
             this.dom.fundForm.reset();
+            // Set default date
+            const dateInput = document.getElementById('pcFundDate');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
             this.dom.fundModal.classList.add('active');
         } else if (type === 'expense' && this.dom.expenseModal) {
             this.dom.expenseForm.reset();
+            // Set default date
+            const dateInput = document.getElementById('pcExpenseDate');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
             this.dom.expenseModal.classList.add('active');
         }
     },
@@ -90,6 +103,40 @@ const pettyCashManager = {
             this.dom.fundModal.classList.remove('active');
         } else if (type === 'expense' && this.dom.expenseModal) {
             this.dom.expenseModal.classList.remove('active');
+        }
+    },
+
+    async loadEmployees() {
+        try {
+            // Use existing dataLayer from employees.js / data-api.js if available
+            if (window.dataLayer && window.dataLayer.getAllEmployees) {
+                this.employees = await window.dataLayer.getAllEmployees();
+                this.populateEmployeeSelect();
+            }
+        } catch (error) {
+            console.error('Error loading employees for petty cash:', error);
+        }
+    },
+
+    populateEmployeeSelect() {
+        const select = this.dom.employeeSelect;
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Select Employee --</option>';
+
+        // Add "Me / Admin" option
+        const adminOption = document.createElement('option');
+        adminOption.value = 'admin';
+        adminOption.textContent = 'Me (Admin)';
+        select.appendChild(adminOption);
+
+        if (this.employees && this.employees.length > 0) {
+            this.employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id; // employee table id
+                option.textContent = emp.name;
+                select.appendChild(option);
+            });
         }
     },
 
@@ -150,9 +197,15 @@ const pettyCashManager = {
                     const amountClass = isFund ? 'text-success' : 'text-danger';
                     const amountPrefix = isFund ? '+' : '-';
 
+                    // Determine what to show in "Added By" / "Employee" column
+                    let addedBy = entry.employee_name;
+                    if (!addedBy) {
+                        addedBy = isFund ? 'Admin (Deposit)' : 'Admin';
+                    }
+
                     row.innerHTML = `
                         <td>${formatDate(entry.date)}</td>
-                        <td>${entry.type || (isFund ? 'Fund Added' : 'Expense')}</td>
+                        <td><span style="font-weight: 500;">${addedBy}</span></td>
                         <td>${entry.description}</td>
                         <td>${entry.category || '-'}</td>
                         <td class="${amountClass}" style="font-weight: 600;">
@@ -176,12 +229,16 @@ const pettyCashManager = {
         const description = document.getElementById('pcFundDescription').value;
         const date = document.getElementById('pcFundDate').value;
 
+        // Optional: you could add a "Source" field handling if needed, 
+        // e.g. bank vs cash. For now forcing 'add_fund'.
+
         await this.addTransaction({
             amount,
             description,
             date,
             transaction_type: 'add_fund',
-            category: 'Fund Deposit'
+            category: 'Fund Deposit',
+            employee_name: 'Admin'
         });
 
         this.closeModal('fund');
@@ -193,10 +250,23 @@ const pettyCashManager = {
         const description = document.getElementById('pcExpenseDescription').value;
         const date = document.getElementById('pcExpenseDate').value;
         const category = document.getElementById('pcExpenseCategory').value;
+        const employeeIdSelect = document.getElementById('pcExpenseEmployee').value;
 
         if (parseFloat(amount) > this.balance) {
             const confirmMsg = `Warning: Expense amount (${formatCurrency(amount)}) exceeds available balance (${formatCurrency(this.balance)}). Continue?`;
             if (!confirm(confirmMsg)) return;
+        }
+
+        // Determine employee name and ID
+        let employeeName = 'Admin';
+        let employeeId = null;
+
+        if (employeeIdSelect && employeeIdSelect !== 'admin') {
+            const emp = this.employees.find(e => e.id === employeeIdSelect);
+            if (emp) {
+                employeeName = emp.name;
+                employeeId = emp.id;
+            }
         }
 
         await this.addTransaction({
@@ -204,7 +274,9 @@ const pettyCashManager = {
             description,
             date,
             transaction_type: 'expense',
-            category
+            category,
+            employee_id: employeeId,
+            employee_name: employeeName
         });
 
         this.closeModal('expense');
@@ -214,11 +286,6 @@ const pettyCashManager = {
         try {
             const user = await supabaseClient.auth.getUser();
             const userId = user.data.user?.id;
-
-            // Get Admin ID (simplified, assuming single tenant or current user context)
-            // For now we use the user's ID as admin_id if they are the creator, 
-            // OR we should get it from the user profile if they are an employee.
-            // Using existing helper if available or simple fetch
 
             let adminId = userId;
             // Try to get admin_id from local profile if available
@@ -267,5 +334,4 @@ const pettyCashManager = {
     }
 };
 
-// Initialize when DOM is ready
 // Auto-init removed; handled by app.js
