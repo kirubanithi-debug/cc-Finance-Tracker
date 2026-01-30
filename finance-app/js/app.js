@@ -245,7 +245,8 @@ class App {
         const yearSelectIds = [
             'dashFilterYear',
             'filterYear',
-            'analyticsYearSelect'
+            'analyticsYearSelect',
+            'growthYearSelect'
         ];
 
         const startYear = 2024;
@@ -1035,7 +1036,7 @@ class App {
                     ${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount, currency)}
                 </td>
                 <td><span class="badge badge-${entry.type}">${entry.type}</span></td>
-                <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
+                <td>${entry.type === 'expense' ? '-' : `<span class="badge badge-${entry.status}">${entry.status}</span>`}</td>
                 <td>${entry.createdByName || '-'}</td>
             </tr>
         `).join('');
@@ -1066,7 +1067,7 @@ class App {
                     ${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount, currency)}
                 </td>
                 <td><span class="badge badge-${entry.type}">${entry.type}</span></td>
-                <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
+                <td>${entry.type === 'expense' ? '-' : `<span class="badge badge-${entry.status}">${entry.status}</span>`}</td>
                 <td>${formatPaymentMode(entry.paymentMode)}</td>
                 <td>${entry.createdByName || '-'}</td>
                 <td>
@@ -1241,8 +1242,17 @@ class App {
                             <small>By</small>
                             <strong>${entry.createdByName || 'Unknown'}</strong>
                         </span>
+                        <div class="pending-entry-description" style="grid-column: span 2; margin-top: 5px;">
+                            <small style="display: block; font-size: 0.75rem; color: var(--color-text-muted);">Description</small>
+                            <div style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4; max-height: 50px; overflow-y: auto;">
+                                ${entry.description || '<span style="color: var(--color-text-muted); font-style: italic;">No description provided</span>'}
+                            </div>
+                        </div>
                     </div>
                     <div class="pending-entry-actions">
+                        <button class="btn-view" data-id="${entry.id}" title="View Details">
+                            👁 View
+                        </button>
                         <button class="btn-approve" data-id="${entry.id}" data-type="${isDeletion ? 'delete' : 'approve'}" 
                                 title="${isDeletion ? 'Confirm Delete' : 'Approve'}" 
                                 style="${isDeletion ? 'background-color: var(--color-danger); color: white;' : ''}">
@@ -1300,6 +1310,20 @@ class App {
                     } catch (error) {
                         console.error('Error declining:', error);
                         showToast('Action failed', 'error');
+                    }
+                });
+            });
+
+            // Bind view buttons
+            container.querySelectorAll('.btn-view').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.dataset.id;
+                    try {
+                        const entry = await dataLayer.getEntry(parseInt(id));
+                        this.openEntryModal(entry);
+                    } catch (error) {
+                        console.error('Error fetching entry:', error);
+                        showToast('Failed to load entry details', 'error');
                     }
                 });
             });

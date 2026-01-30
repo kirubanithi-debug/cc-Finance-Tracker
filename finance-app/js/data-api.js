@@ -677,6 +677,47 @@ class DataLayerAPI {
         return monthlyData;
     }
 
+    async getDailyData(year, month) {
+        const userId = await this.getCurrentUserId();
+        const isUserAdmin = await this.isAdmin();
+
+        const monthNum = parseInt(month) + 1;
+        const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, monthNum, 0).getDate();
+        const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${lastDay}`;
+
+        let query = supabaseClient
+            .from('finance_entries')
+            .select('*')
+            .eq('approval_status', 'approved')
+            .gte('date', startDate)
+            .lte('date', endDate);
+
+        if (isUserAdmin) {
+            query = query.eq('admin_id', userId);
+        } else {
+            query = query.eq('user_id', userId);
+        }
+
+        const { data, error } = await query;
+        if (error) this.handleError(error, 'Get daily data');
+
+        // Aggregate by day
+        const dailyData = Array(lastDay).fill(null).map(() => ({ income: 0, expense: 0 }));
+
+        (data || []).forEach(entry => {
+            const day = new Date(entry.date).getDate() - 1;
+            const amount = parseFloat(entry.amount) || 0;
+            if (entry.type === 'income') {
+                dailyData[day].income += amount;
+            } else {
+                dailyData[day].expense += amount;
+            }
+        });
+
+        return dailyData;
+    }
+
     async getPaymentModeDistribution() {
         const entries = await this.getAllEntries();
         const distribution = {};
@@ -1148,7 +1189,7 @@ class DataLayerAPI {
      * Get all employees for current admin
      */
     async getAllEmployees() {
-        const adminId = await this.getCurrentUserId();
+        const adminId = await this.getAdminId();
         const { data, error } = await supabaseClient
             .from('employees')
             .select('*')

@@ -704,53 +704,6 @@ class InvoiceManager {
     }
 
     /**
-     * Save invoice to database
-     */
-    async saveInvoice() {
-        const data = this.getInvoiceData();
-
-        // Validate
-        if (!data.clientName) {
-            showToast('Please enter client name', 'error');
-            return;
-        }
-
-        if (data.services.length === 0 || !data.services[0].name) {
-            showToast('Please add at least one service', 'error');
-            return;
-        }
-
-        try {
-            await dataLayer.addInvoice(data);
-
-            // Create finance entry if needed
-            if (data.grandTotal > 0) {
-                await dataLayer.addEntry({
-                    date: data.invoiceDate,
-                    clientName: data.clientName,
-                    description: `Invoice ${data.invoiceNumber}`,
-                    amount: data.grandTotal,
-                    type: 'income',
-                    status: data.paymentStatus === 'paid' ? 'received' : 'pending',
-                    paymentMode: 'bank_transfer'
-                });
-            }
-
-            showToast('Invoice saved successfully', 'success');
-            await this.renderInvoiceHistory();
-            this.resetForm();
-
-            // Update charts
-            if (typeof chartsManager !== 'undefined') {
-                chartsManager.updateAllCharts();
-            }
-        } catch (error) {
-            console.error('Error saving invoice:', error);
-            showToast('Failed to save invoice', 'error');
-        }
-    }
-
-    /**
      * Send invoice via email (Supabase Edge Function)
      */
     async sendEmail() {
@@ -841,13 +794,6 @@ class InvoiceManager {
         const emptyState = document.getElementById('invoicesEmptyState');
         const historySection = container ? container.closest('.invoice-history-section') : null;
 
-        if (!isAdmin) {
-            if (container) container.innerHTML = '';
-            if (emptyState) emptyState.style.display = 'none';
-            if (historySection) historySection.style.display = 'none';
-            return;
-        }
-
         if (historySection) historySection.style.display = 'block';
 
         const invoices = await dataLayer.getAllInvoices();
@@ -873,7 +819,7 @@ class InvoiceManager {
                 </div>
                 <div class="invoice-history-actions">
                     <button class="btn btn-sm btn-secondary view-invoice" data-id="${inv.id}">View</button>
-                    <button class="btn btn-sm btn-danger delete-invoice" data-id="${inv.id}">Delete</button>
+                    ${isAdmin ? `<button class="btn btn-sm btn-danger delete-invoice" data-id="${inv.id}">Delete</button>` : ''}
                 </div>
             </div>
         `).join('');

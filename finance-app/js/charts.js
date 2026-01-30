@@ -53,7 +53,34 @@ class ChartsManager {
         Chart.defaults.responsive = true;
         Chart.defaults.maintainAspectRatio = false;
 
+        this.bindChartEvents();
         await this.renderAllCharts();
+    }
+
+    /**
+     * Bind events for dynamic charts
+     */
+    bindChartEvents() {
+        const growthViewMode = document.getElementById('growthViewMode');
+        const growthYearSelect = document.getElementById('growthYearSelect');
+        const growthMonthSelect = document.getElementById('growthMonthSelect');
+
+        if (growthViewMode) {
+            growthViewMode.addEventListener('change', (e) => {
+                const mode = e.target.value;
+                growthYearSelect.classList.toggle('hidden', mode === 'yearly');
+                growthMonthSelect.classList.toggle('hidden', mode !== 'daily');
+                this.renderRevenueGrowthChart();
+            });
+        }
+
+        if (growthYearSelect) {
+            growthYearSelect.addEventListener('change', () => this.renderRevenueGrowthChart());
+        }
+
+        if (growthMonthSelect) {
+            growthMonthSelect.addEventListener('change', () => this.renderRevenueGrowthChart());
+        }
     }
 
     /**
@@ -68,7 +95,7 @@ class ChartsManager {
             this.renderMonthlyBarChart(currentYear),
             this.renderStatusPieChart(),
             this.renderPaymentDonutChart(),
-            this.renderYearLineChart()
+            this.renderRevenueGrowthChart()
         ]);
     }
 
@@ -436,42 +463,64 @@ class ChartsManager {
     }
 
     /**
-     * Analytics - Year-wise Revenue Growth Line Chart
+     * Analytics - Revenue Growth Line Chart (Multi-View: Yearly, Monthly, Daily)
      */
-    async renderYearLineChart() {
+    async renderRevenueGrowthChart() {
         const ctx = document.getElementById('yearLineChart');
         if (!ctx) return;
 
-        const yearlyData = await dataLayer.getYearlyRevenue();
+        const viewMode = document.getElementById('growthViewMode')?.value || 'yearly';
+        const year = document.getElementById('growthYearSelect')?.value || new Date().getFullYear();
+        const month = document.getElementById('growthMonthSelect')?.value || new Date().getMonth();
+
         const themeColors = this.getThemeColors();
 
         // Destroy existing chart
-        if (this.charts.yearLine) {
-            this.charts.yearLine.destroy();
+        if (this.charts.revenueGrowth) {
+            this.charts.revenueGrowth.destroy();
         }
 
-        const years = Object.keys(yearlyData).sort();
-        const incomeData = years.map(y => yearlyData[y].income);
-        const expenseData = years.map(y => yearlyData[y].expense);
-        const profitData = years.map(y => yearlyData[y].income - yearlyData[y].expense);
+        let labels = [];
+        let incomeData = [];
+        let expenseData = [];
+        let profitData = [];
 
-        this.charts.yearLine = new Chart(ctx, {
+        if (viewMode === 'yearly') {
+            const yearlyData = await dataLayer.getYearlyRevenue();
+            const years = Object.keys(yearlyData).sort();
+            labels = years;
+            incomeData = years.map(y => yearlyData[y].income);
+            expenseData = years.map(y => yearlyData[y].expense);
+            profitData = years.map(y => yearlyData[y].income - yearlyData[y].expense);
+        } else if (viewMode === 'monthly') {
+            const monthlyData = await dataLayer.getMonthlyData(year);
+            labels = this.months;
+            incomeData = monthlyData.map(m => m.income);
+            expenseData = monthlyData.map(m => m.expense);
+            profitData = monthlyData.map(m => m.income - m.expense);
+        } else if (viewMode === 'daily') {
+            const dailyData = await dataLayer.getDailyData(year, month);
+            labels = dailyData.map((_, i) => (i + 1).toString());
+            incomeData = dailyData.map(d => d.income);
+            expenseData = dailyData.map(d => d.expense);
+            profitData = dailyData.map(d => d.income - d.expense);
+        }
+
+        this.charts.revenueGrowth = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: years,
+                labels: labels,
                 datasets: [
                     {
-                        label: 'Revenue',
+                        label: 'Income',
                         data: incomeData,
                         borderColor: this.chartColors.success,
                         backgroundColor: this.chartColors.successLight,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: this.chartColors.success,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: this.chartColors.success
                     },
                     {
                         label: 'Expenses',
@@ -480,11 +529,9 @@ class ChartsManager {
                         backgroundColor: this.chartColors.dangerLight,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: this.chartColors.danger,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: this.chartColors.danger
                     },
                     {
                         label: 'Net Profit',
@@ -493,11 +540,9 @@ class ChartsManager {
                         backgroundColor: this.chartColors.primaryLight,
                         fill: false,
                         tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                         pointBackgroundColor: this.chartColors.primary,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
                         borderDash: [5, 5]
                     }
                 ]
@@ -511,8 +556,7 @@ class ChartsManager {
                             usePointStyle: true,
                             pointStyle: 'circle',
                             color: themeColors.textColor,
-                            padding: 20,
-                            font: { weight: 500 }
+                            padding: 20
                         }
                     },
                     tooltip: {
@@ -535,7 +579,7 @@ class ChartsManager {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: themeColors.textColor, font: { weight: 500 } }
+                        ticks: { color: themeColors.textColor }
                     },
                     y: {
                         grid: { color: themeColors.gridColor },

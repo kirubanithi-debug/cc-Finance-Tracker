@@ -124,22 +124,24 @@ const pettyCashManager = {
         try {
             if (window.dataLayer && window.dataLayer.getAllEmployees) {
                 this.employees = await window.dataLayer.getAllEmployees();
-                this.populateEmployeeSelect();
+                await this.populateEmployeeSelect();
             }
         } catch (error) {
             console.error('Error loading employees for petty cash:', error);
         }
     },
 
-    populateEmployeeSelect() {
+    async populateEmployeeSelect() {
         const select = this.dom.employeeSelect;
         if (!select) return;
 
+        const userName = await dataLayer.getCurrentUserName();
+
         select.innerHTML = '<option value="">-- Select Employee --</option>';
-        const adminOption = document.createElement('option');
-        adminOption.value = 'admin';
-        adminOption.textContent = 'Me (Admin)';
-        select.appendChild(adminOption);
+        const meOption = document.createElement('option');
+        meOption.value = 'admin'; // Keep 'admin' value to avoid breaking handleExpenseSubmit logic
+        meOption.textContent = `Me (${userName})`;
+        select.appendChild(meOption);
 
         if (this.employees && this.employees.length > 0) {
             this.employees.forEach(emp => {
@@ -153,10 +155,12 @@ const pettyCashManager = {
 
     async loadData() {
         try {
-            // Fetch all entries
+            const adminId = await dataLayer.getAdminId();
+            // Fetch relevant entries
             const { data, error } = await supabaseClient
                 .from('petty_cash_entries')
                 .select('*')
+                .eq('admin_id', adminId)
                 .order('date', { ascending: false })
                 .order('created_at', { ascending: false });
 
@@ -247,6 +251,7 @@ const pettyCashManager = {
         }
 
         const isAdmin = await dataLayer.isAdmin();
+        const currentUserId = await dataLayer.getCurrentUserId();
 
         // Update Table
         if (this.dom.tableBody) {
@@ -290,7 +295,7 @@ const pettyCashManager = {
                     }
 
                     // Delete button: Admins can delete anything. Employees can only delete their own PENDING entries.
-                    const isOwnEntry = entry.user_id === (await dataLayer.getCurrentUserId());
+                    const isOwnEntry = entry.user_id === currentUserId;
                     const canDelete = isAdmin || (status === 'pending' && isOwnEntry);
 
                     if (canDelete) {
@@ -383,13 +388,9 @@ const pettyCashManager = {
 
     async addTransaction(data) {
         try {
-            const user = await supabaseClient.auth.getUser();
-            const userId = user.data.user?.id;
+            const userId = await dataLayer.getCurrentUserId();
             const isAdmin = await dataLayer.isAdmin();
-
-            let adminId = userId;
-            const profile = JSON.parse(localStorage.getItem('finance_user_profile') || '{}');
-            if (profile.admin_id) adminId = profile.admin_id;
+            const adminId = await dataLayer.getAdminId();
 
             // Determine status
             let status = 'approved'; // Default for Admin
