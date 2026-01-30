@@ -306,6 +306,7 @@ class EmployeesManager {
                         console.warn('Error creating user record (non-fatal):', userError);
                     }
 
+                    await this.loadEmployees(); // Explicitly refresh list
                     showToast(`Employee created! Login credentials sent to ${email}`, 'success');
                 } else {
                     throw new Error('Failed to create auth account (no user returned)');
