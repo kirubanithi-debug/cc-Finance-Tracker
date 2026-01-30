@@ -234,6 +234,9 @@ const pettyCashManager = {
 
         const entries = entriesToRender || this.entries;
 
+        // Recalculate balance for ALL entries to ensure accuracy
+        this.calculateBalance(this.entries);
+
         // Update Balance
         if (this.dom.balanceDisplay) {
             this.dom.balanceDisplay.textContent = formatCurrency(this.balance, window.appCurrency || '₹');
@@ -425,7 +428,13 @@ const pettyCashManager = {
             if (error) throw error;
 
             showToast(`Entry ${newStatus}`, 'success');
-            await this.loadData();
+
+            // Optimistic update
+            const entryIndex = this.entries.findIndex(e => e.id == id);
+            if (entryIndex !== -1) {
+                this.entries[entryIndex].status = newStatus;
+            }
+            this.filterAndRender(); // This will recalculate balance if needed
 
         } catch (error) {
             console.error('Error updating status:', error);
@@ -447,7 +456,8 @@ const pettyCashManager = {
             showToast('Entry deleted', 'success');
 
             // Optimistic update
-            this.entries = this.entries.filter(e => e.id !== id);
+            // Handle string vs number ID mismatch
+            this.entries = this.entries.filter(e => e.id != id);
             this.filterAndRender();
 
         } catch (error) {
