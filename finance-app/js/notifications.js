@@ -100,7 +100,17 @@ class NotificationsManager {
         }
     }
 
-    // ... formatTime ...
+    formatTime(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return date.toLocaleDateString();
+    }
 
     async approvePasswordReset(id, email) {
         if (!email) {
@@ -128,7 +138,40 @@ class NotificationsManager {
         }
     }
 
-    // ... markAsRead, markAllAsRead, delete ...
+    async markAsRead(id) {
+        try {
+            await dataLayer.markNotificationAsRead(id);
+            await this.loadNotifications();
+        } catch (error) {
+            console.error('Failed to mark as read:', error);
+        }
+    }
+
+    async markAllAsRead() {
+        try {
+            for (const n of this.notifications) {
+                if (!n.is_read) {
+                    await dataLayer.markNotificationAsRead(n.id);
+                }
+            }
+            await this.loadNotifications();
+        } catch (error) {
+            console.error('Failed to mark all as read:', error);
+        }
+    }
+
+    async delete(id) {
+        if (!(await app.showConfirmationModal('Delete Notification', 'Are you sure you want to delete this notification?'))) return;
+
+        try {
+            await dataLayer.deleteNotification(id);
+            await this.loadNotifications();
+            showToast('Notification deleted', 'success');
+        } catch (error) {
+            console.error('Failed to delete notification:', error);
+            showToast('Failed to delete notification', 'error');
+        }
+    }
 }
 
 window.notificationsManager = new NotificationsManager();

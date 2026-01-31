@@ -1187,6 +1187,11 @@ class App {
                 const analyticsNav = document.querySelector('a[data-page="analytics"]')?.parentElement;
                 if (dashboardNav) dashboardNav.style.display = '';
                 if (analyticsNav) analyticsNav.style.display = '';
+
+                // Refresh notifications for Admin
+                if (window.notificationsManager) {
+                    await window.notificationsManager.loadNotifications();
+                }
             }
 
             // Update profile badge to show role
