@@ -226,13 +226,13 @@ const pettyCashManager = {
                 const amount = parseFloat(entry.amount) || 0;
 
                 if (entry.transaction_type === 'add_fund') {
-                    // Only confirmed funds count
+                    // Only approved funds count towards balance
                     if (entry.status === 'approved') {
                         totalFunds += amount;
                     }
                 } else if (entry.transaction_type === 'expense') {
-                    // Subtract pending expenses too so we don't overspend
-                    if (entry.status !== 'declined') {
+                    // Only approved expenses subtract from balance
+                    if (entry.status === 'approved') {
                         totalExpenses += amount;
                     }
                 }
@@ -441,7 +441,7 @@ const pettyCashManager = {
             const { error } = await supabaseClient
                 .from('petty_cash_entries')
                 .update({ status: newStatus })
-                .eq('id', id);
+                .eq('id', id); // ID is string from HTML, eq handles it or auto-converts for bigint in many cases
 
             if (error) throw error;
 

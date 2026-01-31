@@ -1039,7 +1039,7 @@ class App {
                     ${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount, currency)}
                 </td>
                 <td><span class="badge badge-${entry.type}">${entry.type}</span></td>
-                <td>${entry.type === 'expense' ? '-' : `<span class="badge badge-${entry.status}">${entry.status}</span>`}</td>
+                <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
                 <td>${entry.createdByName || '-'}</td>
             </tr>
         `).join('');
@@ -1070,7 +1070,7 @@ class App {
                     ${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount, currency)}
                 </td>
                 <td><span class="badge badge-${entry.type}">${entry.type}</span></td>
-                <td>${entry.type === 'expense' ? '-' : `<span class="badge badge-${entry.status}">${entry.status}</span>`}</td>
+                <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
                 <td>${formatPaymentMode(entry.paymentMode)}</td>
                 <td>${entry.createdByName || '-'}</td>
                 <td>
@@ -1284,8 +1284,12 @@ class App {
                             await dataLayer.approveEntry(id);
                             showToast('Entry approved successfully', 'success');
                         }
-                        await this.renderPendingApprovals();
                         await this.refreshData();
+                        // Also remove from local list for immediate visual update
+                        btn.closest('.pending-entry-card')?.remove();
+                        if (container.children.length === 0) {
+                            section.style.display = 'none';
+                        }
                     } catch (error) {
                         console.error('Error action:', error);
                         showToast('Action failed', 'error');

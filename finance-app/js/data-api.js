@@ -395,7 +395,7 @@ class DataLayerAPI {
         const { data, error } = await supabaseClient
             .from('finance_entries')
             .update(dbEntry)
-            .eq('id', id)
+            .eq('id', parseInt(id))
             .select()
             .single();
 
@@ -413,7 +413,7 @@ class DataLayerAPI {
             const { error } = await supabaseClient
                 .from('finance_entries')
                 .delete()
-                .eq('id', id);
+                .eq('id', parseInt(id));
 
             if (error) this.handleError(error, 'Delete entry');
         } else {
@@ -531,7 +531,7 @@ class DataLayerAPI {
                 approved_by: userId,
                 approved_at: new Date().toISOString()
             })
-            .eq('id', id)
+            .eq('id', parseInt(id))
             .select()
             .single();
 
@@ -547,7 +547,7 @@ class DataLayerAPI {
         const { data, error } = await supabaseClient
             .from('finance_entries')
             .update({ approval_status: 'declined' })
-            .eq('id', id)
+            .eq('id', parseInt(id))
             .select()
             .single();
 
