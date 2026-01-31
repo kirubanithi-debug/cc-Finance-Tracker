@@ -441,7 +441,7 @@ const pettyCashManager = {
             const { error } = await supabaseClient
                 .from('petty_cash_entries')
                 .update({ status: newStatus })
-                .eq('id', id); // ID is string from HTML, eq handles it or auto-converts for bigint in many cases
+                .eq('id', parseInt(id)); // Convert string ID to integer for DB matching
 
             if (error) throw error;
 
@@ -474,7 +474,7 @@ const pettyCashManager = {
             const { error } = await supabaseClient
                 .from('petty_cash_entries')
                 .delete()
-                .eq('id', id);
+                .eq('id', parseInt(id));
 
             if (error) throw error;
 
