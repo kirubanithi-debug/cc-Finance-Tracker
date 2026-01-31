@@ -428,7 +428,8 @@ class InvoiceManager {
             grandTotal,
 
             // Status
-            paymentStatus: document.getElementById('invoicePaymentStatus').value
+            paymentStatus: document.getElementById('invoicePaymentStatus').value,
+            created_by_name: document.getElementById('invoiceLoginName')?.value || 'Admin'
         };
     }
 
@@ -466,7 +467,6 @@ class InvoiceManager {
                 </div>
                 <div class="invoice-party-preview">
                     <h4>Invoice Info</h4>
-                    <p><strong>Status:</strong> <span class="badge badge-${data.paymentStatus}">${data.paymentStatus}</span></p>
                     <p><strong>Issued By:</strong> ${data.created_by_name || 'Admin'}</p>
                 </div>
             </div>
@@ -642,34 +642,9 @@ class InvoiceManager {
             });
         }
 
-        // Right: Payment Status
-        doc.setFontSize(8);
-        doc.setTextColor(...grayColor);
-        doc.setFont('helvetica', 'bold');
-        doc.text('PAYMENT STATUS', pageWidth / 2 + 20, yPos);
-
-        const statusY = yPos + 4;
-        const status = (data.paymentStatus || 'pending').toUpperCase();
-
-        // Status Badge Logic
-        let statusColor = [245, 158, 11]; // Orange (Pending)
-        let statusText = 'PENDING';
-
-        if (status === 'RECEIVED' || status === 'PAID') {
-            statusColor = [16, 185, 129]; // Green
-            statusText = 'PAID';
-        }
-
-        // Draw Badge
-        doc.setFillColor(...statusColor);
-        doc.roundedRect(pageWidth / 2 + 20, statusY, 20, 6, 3, 3, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'bold');
-        doc.text(statusText, pageWidth / 2 + 30, statusY + 4, { align: 'center' });
 
         // ================= TABLE SECTION =================
-        yPos = Math.max(billToY, statusY + 15) + 10;
+        yPos = Math.max(billToY, yPos + 15) + 10;
 
         const tableData = data.services.map((s) => [
             s.name,
@@ -927,8 +902,8 @@ class InvoiceManager {
                         <p>${(invoice.clientAddress || '').replace(/\n/g, '<br>')}</p>
                     </div>
                     <div class="invoice-party-preview">
-                        <h4>Payment Status</h4>
-                        <p><span class="badge badge-${invoice.paymentStatus}">${invoice.paymentStatus}</span></p>
+                        <h4>Invoice Info</h4>
+                        <p><strong>Issued By:</strong> ${invoice.createdByName || 'Admin'}</p>
                     </div>
                 </div>
                 
