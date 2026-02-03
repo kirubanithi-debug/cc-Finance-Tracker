@@ -729,24 +729,124 @@ class App {
             });
         }
 
+
+        // Populate export year dropdown
+        const populateExportYears = () => {
+            const yearSelect = document.getElementById('exportYear');
+            if (!yearSelect) return;
+
+            const currentYear = new Date().getFullYear();
+            const startYear = 2020; // You can adjust this
+
+            // Keep the "All Years" option
+            yearSelect.innerHTML = '<option value="">All Years</option>';
+
+            // Add years from current year down to start year
+            for (let year = currentYear; year >= startYear; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+        };
+
+        // Call on page load
+        populateExportYears();
+
+        // Clear export filters
+        document.getElementById('clearExportFilters')?.addEventListener('click', () => {
+            document.getElementById('exportStartDate').value = '';
+            document.getElementById('exportEndDate').value = '';
+            document.getElementById('exportMonth').value = '';
+            document.getElementById('exportYear').value = '';
+        });
+
         // Export data
         document.getElementById('exportDataBtn').addEventListener('click', async () => {
             const format = document.getElementById('exportFormat').value;
-            const data = await dataLayer.exportData();
+            const exportType = document.getElementById('exportType').value;
             const dateStr = new Date().toISOString().split('T')[0];
+
+            // Get filter values
+            const filters = {
+                startDate: document.getElementById('exportStartDate').value,
+                endDate: document.getElementById('exportEndDate').value,
+                month: document.getElementById('exportMonth').value,
+                year: document.getElementById('exportYear').value
+            };
+
+            // Fetch the specific data based on export type
+            let data;
+            let filename;
+            let rawData; // Unfiltered data
+
+            switch (exportType) {
+                case 'entries':
+                    rawData = await dataLayer.getAllEntries();
+                    data = { entries: this.filterDataByDate(rawData, filters) };
+                    filename = `finance_entries_${dateStr}`;
+                    break;
+                case 'invoices':
+                    rawData = await dataLayer.getAllInvoices();
+                    data = { invoices: this.filterDataByDate(rawData, filters) };
+                    filename = `invoices_${dateStr}`;
+                    break;
+                case 'petty_cash':
+                    rawData = await dataLayer.getAllPettyCash();
+                    data = { petty_cash: this.filterDataByDate(rawData, filters) };
+                    filename = `petty_cash_${dateStr}`;
+                    break;
+                case 'investments':
+                    rawData = await dataLayer.getAllInvestments();
+                    data = { investments: this.filterDataByDate(rawData, filters, 'date_bought') };
+                    filename = `investments_${dateStr}`;
+                    break;
+                case 'clients':
+                    rawData = await dataLayer.getAllClients();
+                    // Clients don't typically have date filtering, but we can filter by created_at if needed
+                    data = { clients: rawData };
+                    filename = `clients_${dateStr}`;
+                    break;
+                case 'all':
+                default:
+                    data = await dataLayer.exportData();
+                    // Apply filters to all data types
+                    if (data.entries) data.entries = this.filterDataByDate(data.entries, filters);
+                    if (data.invoices) data.invoices = this.filterDataByDate(data.invoices, filters);
+                    filename = `financeflow_backup_${dateStr}`;
+                    break;
+            }
+
+            // Add filter info to filename if filters are applied
+            if (filters.month && filters.year) {
+                filename += `_${filters.year}_${filters.month}`;
+            } else if (filters.year) {
+                filename += `_${filters.year}`;
+            } else if (filters.month) {
+                filename += `_month_${filters.month}`;
+            } else if (filters.startDate || filters.endDate) {
+                if (filters.startDate && filters.endDate) {
+                    filename += `_${filters.startDate}_to_${filters.endDate}`;
+                } else if (filters.startDate) {
+                    filename += `_from_${filters.startDate}`;
+                } else if (filters.endDate) {
+                    filename += `_until_${filters.endDate}`;
+                }
+            }
 
             if (format === 'json') {
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                this.downloadBlob(blob, `financeflow_backup_${dateStr}.json`);
+                this.downloadBlob(blob, `${filename}.json`);
                 showToast('JSON backup exported successfully', 'success');
             } else if (format === 'csv') {
-                this.exportToCSV(data, `financeflow_data_${dateStr}.csv`);
+                this.exportToCSV(data, exportType, `${filename}.csv`);
                 showToast('CSV data exported successfully', 'success');
             } else if (format === 'pdf') {
-                this.exportToPDF(data, `financeflow_report_${dateStr}.pdf`);
+                this.exportToPDF(data, exportType, `${filename}.pdf`);
                 showToast('PDF report exported successfully', 'success');
             }
         });
+
 
         // Import data
         const importInput = document.getElementById('importDataInput');
@@ -1360,6 +1460,48 @@ class App {
             console.error('Error rendering pending approvals:', error);
         }
     }
+
+    /**
+     * Filter data array by date filters (startDate, endDate, month, year)
+     * @param {Array} dataArray - Array of data objects to filter
+     * @param {Object} filters - Filter object with startDate, endDate, month, year
+     * @param {String} dateField - Name of the date field to filter on (default: 'date')
+     * @returns {Array} Filtered data array
+     */
+    filterDataByDate(dataArray, filters, dateField = 'date') {
+        if (!dataArray || dataArray.length === 0) return dataArray;
+
+        const { startDate, endDate, month, year } = filters;
+
+        // If no filters are set, return all data
+        if (!startDate && !endDate && !month && !year) {
+            return dataArray;
+        }
+
+        return dataArray.filter(item => {
+            const itemDate = item[dateField];
+            if (!itemDate) return true; // Include items without dates
+
+            // Match year if specified
+            if (year) {
+                const itemYear = itemDate.substring(0, 4);
+                if (itemYear !== year) return false;
+            }
+
+            // Match month if specified (and optionally year)
+            if (month) {
+                const itemMonth = itemDate.substring(5, 7);
+                if (itemMonth !== month) return false;
+            }
+
+            // Match date range if specified
+            if (startDate && itemDate < startDate) return false;
+            if (endDate && itemDate > endDate) return false;
+
+            return true;
+        });
+    }
+
     /**
      * Helper to download a blob as a file
      */
@@ -1375,27 +1517,106 @@ class App {
     /**
      * Export data to CSV
      */
-    exportToCSV(data, filename) {
-        const entries = data.finance_entries || [];
-        if (entries.length === 0) {
-            showToast('No entries to export', 'info');
+    exportToCSV(data, exportType, filename) {
+        let headers = [];
+        let rows = [];
+        let dataArray = [];
+
+        // Determine which data to export and set headers
+        switch (exportType) {
+            case 'entries':
+                dataArray = data.entries || [];
+                headers = ['Date', 'Client', 'Description', 'Amount', 'Type', 'Status', 'Payment Mode', 'Created By'];
+                rows = dataArray.map(entry => [
+                    entry.date,
+                    `"${(entry.clientName || '').replace(/"/g, '""')}"`,
+                    `"${(entry.description || '').replace(/"/g, '""')}"`,
+                    entry.amount,
+                    entry.type,
+                    entry.status,
+                    entry.paymentMode,
+                    `"${(entry.createdByName || '').replace(/"/g, '""')}"`
+                ]);
+                break;
+
+            case 'invoices':
+                dataArray = data.invoices || [];
+                headers = ['Invoice #', 'Client', 'Date', 'Due Date', 'Subtotal', 'Tax', 'Total', 'Status'];
+                rows = dataArray.map(inv => [
+                    inv.invoiceNumber,
+                    `"${(inv.clientName || '').replace(/"/g, '""')}"`,
+                    inv.date,
+                    inv.dueDate,
+                    inv.subtotal,
+                    inv.tax,
+                    inv.total,
+                    inv.status
+                ]);
+                break;
+
+            case 'petty_cash':
+                dataArray = data.petty_cash || [];
+                headers = ['Date', 'Type', 'Amount', 'Description', 'Category', 'Added By', 'Status'];
+                rows = dataArray.map(pc => [
+                    pc.date,
+                    pc.type,
+                    pc.amount,
+                    `"${(pc.description || '').replace(/"/g, '""')}"`,
+                    pc.category || '',
+                    `"${(pc.employee_name || '').replace(/"/g, '""')}"`,
+                    pc.approval_status
+                ]);
+                break;
+
+            case 'investments':
+                dataArray = data.investments || [];
+                headers = ['Item', 'Type', 'Amount', 'Date Bought', 'Purpose', 'Status'];
+                rows = dataArray.map(inv => [
+                    `"${(inv.item || '').replace(/"/g, '""')}"`,
+                    inv.type,
+                    inv.amount,
+                    inv.date_bought,
+                    `"${(inv.purpose || '').replace(/"/g, '""')}"`,
+                    inv.approval_status
+                ]);
+                break;
+
+            case 'clients':
+                dataArray = data.clients || [];
+                headers = ['Name', 'Phone', 'Email', 'Address'];
+                rows = dataArray.map(client => [
+                    `"${(client.name || '').replace(/"/g, '""')}"`,
+                    client.phone || '',
+                    client.email || '',
+                    `"${(client.address || '').replace(/"/g, '""')}"`
+                ]);
+                break;
+
+            case 'all':
+            default:
+                // Export all finance entries for 'all' type
+                dataArray = data.entries || [];
+                headers = ['Date', 'Client', 'Description', 'Amount', 'Type', 'Status', 'Payment Mode', 'Created By'];
+                rows = dataArray.map(entry => [
+                    entry.date,
+                    `"${(entry.clientName || '').replace(/"/g, '""')}"`,
+                    `"${(entry.description || '').replace(/"/g, '""')}"`,
+                    entry.amount,
+                    entry.type,
+                    entry.status,
+                    entry.paymentMode,
+                    `"${(entry.createdByName || '').replace(/"/g, '""')}"`
+                ]);
+                break;
+        }
+
+        if (dataArray.length === 0) {
+            showToast('No data to export', 'info');
             return;
         }
 
-        const headers = ['Date', 'Client', 'Description', 'Amount', 'Type', 'Status', 'Payment Mode', 'Created By'];
         const csvRows = [headers.join(',')];
-
-        entries.forEach(entry => {
-            const row = [
-                entry.date,
-                `"${(entry.client_name || '').replace(/"/g, '""')}"`,
-                `"${(entry.description || '').replace(/"/g, '""')}"`,
-                entry.amount,
-                entry.type,
-                entry.status,
-                entry.payment_mode,
-                `"${(entry.created_by_name || '').replace(/"/g, '""')}"`
-            ];
+        rows.forEach(row => {
             csvRows.push(row.join(','));
         });
 
@@ -1407,10 +1628,119 @@ class App {
     /**
      * Export data to PDF report
      */
-    exportToPDF(data, filename) {
-        const entries = data.finance_entries || [];
-        if (entries.length === 0) {
-            showToast('No entries to export', 'info');
+    exportToPDF(data, exportType, filename) {
+        let tableColumn = [];
+        let tableRows = [];
+        let dataArray = [];
+        let reportTitle = '';
+
+        // Determine which data to export
+        switch (exportType) {
+            case 'entries':
+                dataArray = data.entries || [];
+                reportTitle = 'Finance Entries Report';
+                tableColumn = ["Date", "Client", "Description", "Amount", "Type", "Status"];
+                dataArray.forEach(entry => {
+                    const rowData = [
+                        entry.date,
+                        entry.clientName || '',
+                        entry.description || '',
+                        `${window.appCurrency}${parseFloat(entry.amount).toFixed(2)}`,
+                        entry.type.toUpperCase(),
+                        entry.status.toUpperCase()
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+
+            case 'invoices':
+                dataArray = data.invoices || [];
+                reportTitle = 'Invoices Report';
+                tableColumn = ["Invoice #", "Client", "Date", "Due Date", "Total", "Status"];
+                dataArray.forEach(inv => {
+                    const rowData = [
+                        inv.invoiceNumber || '',
+                        inv.clientName || '',
+                        inv.date || '',
+                        inv.dueDate || '',
+                        `${window.appCurrency}${parseFloat(inv.total || 0).toFixed(2)}`,
+                        (inv.status || 'draft').toUpperCase()
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+
+            case 'petty_cash':
+                dataArray = data.petty_cash || [];
+                reportTitle = 'Petty Cash Report';
+                tableColumn = ["Date", "Type", "Amount", "Description", "Category", "Status"];
+                dataArray.forEach(pc => {
+                    const rowData = [
+                        pc.date || '',
+                        (pc.type || 'expense').toUpperCase(),
+                        `${window.appCurrency}${parseFloat(pc.amount || 0).toFixed(2)}`,
+                        pc.description || '',
+                        pc.category || '',
+                        (pc.approval_status || 'pending').toUpperCase()
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+
+            case 'investments':
+                dataArray = data.investments || [];
+                reportTitle = 'Investments Report';
+                tableColumn = ["Item", "Type", "Amount", "Date Bought", "Purpose", "Status"];
+                dataArray.forEach(inv => {
+                    const rowData = [
+                        inv.item || '',
+                        inv.type || '',
+                        `${window.appCurrency}${parseFloat(inv.amount || 0).toFixed(2)}`,
+                        inv.date_bought || '',
+                        inv.purpose || '',
+                        (inv.approval_status || 'pending').toUpperCase()
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+
+            case 'clients':
+                dataArray = data.clients || [];
+                reportTitle = 'Clients Directory';
+                tableColumn = ["Name", "Phone", "Email", "Address"];
+                dataArray.forEach(client => {
+                    const rowData = [
+                        client.name || '',
+                        client.phone || '',
+                        client.email || '',
+                        client.address || ''
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+
+            case 'all':
+            default:
+                // For 'all', export finance entries
+                dataArray = data.entries || [];
+                reportTitle = 'FinanceFlow - Complete Report';
+                tableColumn = ["Date", "Client", "Description", "Amount", "Type", "Status"];
+                dataArray.forEach(entry => {
+                    const rowData = [
+                        entry.date,
+                        entry.clientName || '',
+                        entry.description || '',
+                        `${window.appCurrency}${parseFloat(entry.amount).toFixed(2)}`,
+                        entry.type.toUpperCase(),
+                        entry.status.toUpperCase()
+                    ];
+                    tableRows.push(rowData);
+                });
+                break;
+        }
+
+        if (dataArray.length === 0) {
+            showToast('No data to export', 'info');
             return;
         }
 
@@ -1419,27 +1749,11 @@ class App {
 
         // Add Title
         doc.setFontSize(18);
-        doc.text('FinanceFlow - Financial Report', 14, 22);
+        doc.text(reportTitle, 14, 22);
 
         doc.setFontSize(11);
         doc.setTextColor(100);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
-
-        // Prepare table data
-        const tableColumn = ["Date", "Client", "Description", "Amount", "Type", "Status"];
-        const tableRows = [];
-
-        entries.forEach(entry => {
-            const rowData = [
-                entry.date,
-                entry.client_name || '',
-                entry.description || '',
-                `${window.appCurrency}${parseFloat(entry.amount).toFixed(2)}`,
-                entry.type.toUpperCase(),
-                entry.status.toUpperCase()
-            ];
-            tableRows.push(rowData);
-        });
 
         // Add AutoTable
         doc.autoTable({

@@ -1263,6 +1263,30 @@ class DataLayerAPI {
         return true;
     }
 
+    async getAllInvestments() {
+        const adminId = await this.getAdminId();
+        const { data, error } = await supabaseClient
+            .from('investments')
+            .select('*')
+            .eq('admin_id', adminId)
+            .order('date_bought', { ascending: false });
+
+        if (error) this.handleError(error, 'Get all investments');
+        return data || [];
+    }
+
+    async getAllPettyCash() {
+        const adminId = await this.getAdminId();
+        const { data, error } = await supabaseClient
+            .from('petty_cash_entries')
+            .select('*')
+            .eq('admin_id', adminId)
+            .order('date', { ascending: false });
+
+        if (error) this.handleError(error, 'Get all petty cash');
+        return data || [];
+    }
+
     // ==================== Employees (Admin Only) ====================
 
     /**

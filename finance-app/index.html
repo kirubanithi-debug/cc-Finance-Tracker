@@ -1218,15 +1218,90 @@
                             <div class="setting-item export-item">
                                 <div class="setting-info">
                                     <span class="setting-label">Export Data</span>
-                                    <span class="setting-description">Download all your data in preferred format</span>
+                                    <span class="setting-description">Download your data in preferred format with
+                                        optional filters</span>
                                 </div>
-                                <div class="export-actions">
-                                    <select id="exportFormat" class="filter-select export-select">
-                                        <option value="json">JSON (Backup)</option>
-                                        <option value="csv">CSV (Spreadsheet)</option>
-                                        <option value="pdf">PDF (Report)</option>
-                                    </select>
-                                    <button class="btn btn-secondary" id="exportDataBtn">Export</button>
+                                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                                    <!-- Export Type and Format Row -->
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                                        <select id="exportType" class="filter-select export-select"
+                                            style="min-width: 180px;">
+                                            <option value="all">All Data</option>
+                                            <option value="entries">Finance Entries</option>
+                                            <option value="invoices">Invoices</option>
+                                            <option value="petty_cash">Petty Cash</option>
+                                            <option value="investments">Investments</option>
+                                            <option value="clients">Clients</option>
+                                        </select>
+                                        <select id="exportFormat" class="filter-select export-select"
+                                            style="min-width: 150px;">
+                                            <option value="json">JSON (Backup)</option>
+                                            <option value="csv">CSV (Spreadsheet)</option>
+                                            <option value="pdf">PDF (Report)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Date Filters Row -->
+                                    <div
+                                        style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; padding: 0.75rem; background: var(--color-bg-secondary); border-radius: 8px;">
+                                        <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                            <label
+                                                style="font-size: 0.875rem; color: var(--color-text-secondary); white-space: nowrap;">Date
+                                                Range:</label>
+                                            <input type="date" id="exportStartDate" class="filter-input"
+                                                style="max-width: 150px;" title="Start Date">
+                                            <span style="color: var(--color-text-secondary);">to</span>
+                                            <input type="date" id="exportEndDate" class="filter-input"
+                                                style="max-width: 150px;" title="End Date">
+                                        </div>
+                                        <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                            <label
+                                                style="font-size: 0.875rem; color: var(--color-text-secondary);">Month:</label>
+                                            <select id="exportMonth" class="filter-select" style="max-width: 130px;">
+                                                <option value="">All Months</option>
+                                                <option value="01">January</option>
+                                                <option value="02">February</option>
+                                                <option value="03">March</option>
+                                                <option value="04">April</option>
+                                                <option value="05">May</option>
+                                                <option value="06">June</option>
+                                                <option value="07">July</option>
+                                                <option value="08">August</option>
+                                                <option value="09">September</option>
+                                                <option value="10">October</option>
+                                                <option value="11">November</option>
+                                                <option value="12">December</option>
+                                            </select>
+                                        </div>
+                                        <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                            <label
+                                                style="font-size: 0.875rem; color: var(--color-text-secondary);">Year:</label>
+                                            <select id="exportYear" class="filter-select" style="max-width: 100px;">
+                                                <option value="">All Years</option>
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" id="clearExportFilters"
+                                            title="Clear Filters" style="margin-left: auto;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                style="width: 16px; height: 16px;">
+                                                <path d="M18 6L6 18M6 6l12 12"></path>
+                                            </svg>
+                                            Clear
+                                        </button>
+                                    </div>
+
+                                    <!-- Export Button Row -->
+                                    <div style="display: flex;">
+                                        <button class="btn btn-primary" id="exportDataBtn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                style="width: 18px; height: 18px;">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Export Data
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="setting-item">
